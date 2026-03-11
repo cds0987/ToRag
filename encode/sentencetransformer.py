@@ -77,6 +77,8 @@ class textencode(encodeModel):
           with torch.no_grad():
             embeddings = self.model.encode(
             documents,
+            convert_to_numpy = True,
+            normalize_embeddings = True,
             **kwargs
         )
         except Exception as e:
