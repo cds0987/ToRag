@@ -78,7 +78,6 @@ class textencode(encodeModel):
             embeddings = self.model.encode(
             documents,
             convert_to_numpy = True,
-            normalize_embeddings = True,
             **kwargs
         )
         except Exception as e:
