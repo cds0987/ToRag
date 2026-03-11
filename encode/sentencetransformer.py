@@ -11,6 +11,8 @@ def loadUnsloth(model_name: str, **kwargs):
     max_seq_length = kwargs.get("max_seq_length", 512)
     full_finetuning = kwargs.get("full_finetuning", False)
     load_in_4bit = kwargs.get("load_in_4bit", False)
+    if load_in_4bit:
+        kwargs['load_in_16bit'] = False
     model = FastSentenceTransformer.from_pretrained(**kwargs)
     return model.eval()
 
