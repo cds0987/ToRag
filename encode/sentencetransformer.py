@@ -8,8 +8,6 @@ from unsloth import FastSentenceTransformer
 def loadUnsloth(model_name: str, **kwargs):
     logger.info(f"Loading Unsloth FastSentenceTransformer model: {model_name}")
     kwargs["model_name"] = model_name
-    max_seq_length = kwargs.get("max_seq_length", 512)
-    full_finetuning = kwargs.get("full_finetuning", False)
     load_in_4bit = kwargs.get("load_in_4bit", False)
     if load_in_4bit:
         kwargs['load_in_16bit'] = False
@@ -34,8 +32,9 @@ def load_sentence_transformer(model_name: str, **kwargs) -> SentenceTransformer:
     return model.eval()
 
 
-
+from pprint import pformat
 def loadencoder(modelname: str,loadtype,**kwargs):
+    logger.info("Loading encoder with configuration:\n%s", pformat(kwargs))
     if loadtype == "unsloth":
         return loadUnsloth(modelname, **kwargs)
     elif loadtype == "sentence_transformer":
