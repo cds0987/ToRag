@@ -8,7 +8,10 @@ from unsloth import FastSentenceTransformer
 def loadUnsloth(model_name: str, **kwargs):
     logger.info(f"Loading Unsloth FastSentenceTransformer model: {model_name}")
     kwargs["model_name"] = model_name
-    model = FastSentenceTransformer(**kwargs)
+    max_seq_length = kwargs.get("max_seq_length", 512)
+    full_finetuning = kwargs.get("full_finetuning", False)
+    load_in_4bit = kwargs.get("load_in_4bit", False)
+    model = FastSentenceTransformer.from_pretrained(**kwargs)
     return model.eval()
 
 
