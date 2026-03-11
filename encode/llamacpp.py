@@ -6,7 +6,8 @@ logger = logging.getLogger(__name__)
 
 def loadencoder(**kwargs):
     logger.info("Loading LlamaCpp model with configuration:\n%s", pformat(kwargs))
-    model = Llama(**kwargs)
+    kwargs['embedding'] = True
+    model = Llama.from_pretrained(**kwargs)
     return model
 
 
