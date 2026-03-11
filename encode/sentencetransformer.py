@@ -83,5 +83,6 @@ class textencode(encodeModel):
         except Exception as e:
             logger.error(f"Error encoding documents: {e}")
             pass
+        torch.cuda.empty_cache()
         return embeddings
     
