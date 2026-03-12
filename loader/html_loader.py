@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from .file_loader import FileLoader
 from .utils import read_file
 
-class HtmlLoader(FileLoader):
+class htmlLoader(FileLoader):
 
     extensions = [".html"]
 
@@ -21,3 +21,7 @@ class HtmlLoader(FileLoader):
             "text": text,
             "source": path
         }
+        
+from .load import loader_manager
+# Register the loader
+loader_manager.register_loader(htmlLoader())

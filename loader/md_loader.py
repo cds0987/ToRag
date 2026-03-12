@@ -1,10 +1,12 @@
-from .file_loader import FileLoader
-from .utils import read_file
+
+from importlib.abc import FileLoader
+
+from loader.utils import read_file
 
 
-class txtLoader(FileLoader):
+class mdLoader(FileLoader):
 
-    extensions = [".txt"]
+    extensions = [".md"]
 
     def _read(self, path):
 
@@ -20,4 +22,4 @@ class txtLoader(FileLoader):
 
 from .load import loader_manager
 # Register the loader
-loader_manager.register_loader(txtLoader())
+loader_manager.register_loader(mdLoader())

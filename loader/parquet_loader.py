@@ -1,26 +1,24 @@
-from .file_loader import FileLoader
 from datasets import load_dataset
+from .file_loader import FileLoader
 
 
-class csvLoader(FileLoader):
+class parquetLoader(FileLoader):
 
-    extensions = [".csv"]
+    extensions = [".parquet"]
 
     def _read(self, path):
 
         try:
-
             dataset = load_dataset(
-                "csv",
+                "parquet",
                 data_files=path,
                 split="train"
             )
-
         except Exception:
             return None
 
         return dataset
-    
+
 from .load import loader_manager
 # Register the loader
-loader_manager.register_loader(csvLoader())
+loader_manager.register_loader(parquetLoader())

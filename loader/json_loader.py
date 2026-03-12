@@ -35,3 +35,7 @@ class jsonLoader(FileLoader):
             })
 
         return docs
+    
+from .load import loader_manager
+# Register the loader
+loader_manager.register_loader(jsonLoader())
