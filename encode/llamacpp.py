@@ -52,4 +52,8 @@ class textencode(encodeModel):
         except Exception as e:
             logger.error(f"Error encoding documents: {e}")
         embeddings = np.array(vectors).astype("float32")
+        normalize = kwargs.get("normalize", True)
+        if normalize:
+            norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+            embeddings = embeddings / norms
         return embeddings
