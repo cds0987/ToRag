@@ -1,5 +1,5 @@
 
-from importlib.abc import FileLoader
+from .file_loader import FileLoader
 
 from .utils import read_file
 
