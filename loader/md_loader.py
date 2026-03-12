@@ -1,7 +1,7 @@
 
 from importlib.abc import FileLoader
 
-from loader.utils import read_file
+from .utils import read_file
 
 
 class mdLoader(FileLoader):
