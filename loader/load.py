@@ -3,7 +3,7 @@ class LoaderManager:
     def __init__(self):
         self.loaders = []
 
-    def register(self, loader):
+    def register_loader(self, loader):
         self.loaders.append(loader)
 
     def load(self, folder, workers=8):
