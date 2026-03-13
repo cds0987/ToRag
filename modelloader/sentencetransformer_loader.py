@@ -1,11 +1,11 @@
+from unsloth import FastSentenceTransformer
 from sentence_transformers import SentenceTransformer
 from .base_loader import BaseLoader
-from unsloth import FastSentenceTransformer
 import logging
 logger = logging.getLogger(__name__)
 from pprint import pformat
 from typing import List, Union, Optional
-from TORAG.encode.sentencetransformer import sentencetransformermodel
+from ToRag.encode.sentencetransformer import sentencetransformermodel
 class SentenceTransformerLoader(BaseLoader):
 
     def load(self, model_name: str, **kwargs):
