@@ -6,7 +6,7 @@ from ToRag.encode.llamacpp import llamacppModel
 class llamacppLoader(BaseLoader):
 
     def load(self, **kwargs):
-        model = Llama(**kwargs)
+        model = Llama.from_pretrained(**kwargs)
         return llamacppModel(model, **kwargs)
     
 # Register the loader
