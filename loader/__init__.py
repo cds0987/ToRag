@@ -13,3 +13,4 @@ from .excel_loader import excelLoader
 from .docx_loader import docxLoader
 from .pdf_loader import pdfLoader
 from .parquet_loader import parquetLoader
+from .hf_loader import HuggingFaceLoader
