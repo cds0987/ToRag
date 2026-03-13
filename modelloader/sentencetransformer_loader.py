@@ -6,10 +6,11 @@ logger = logging.getLogger(__name__)
 from pprint import pformat
 from typing import List, Union, Optional
 from ToRag.encode.sentencetransformer import sentencetransformermodel
+from pprint import pprint
+
 class sentencetransformerLoader(BaseLoader):
 
     def load(self, model_name: str, **kwargs):
-        logger.info("Loading encoder with configuration:\n%s", pformat(kwargs))
         loadtype = kwargs.get("loadtype", "default")
         # Remove loadtype from kwargs to avoid passing it to the model loading functions
         kwargs.pop("loadtype", None)

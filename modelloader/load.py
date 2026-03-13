@@ -1,3 +1,4 @@
+from pprint import pprint
 class ModelLoaderManager:
 
     def __init__(self):
@@ -9,6 +10,9 @@ class ModelLoaderManager:
     def register_llamacppebd_loader(self, loader):
         self.ebdloaders['llamacpp'] = loader
     def loadModel(self,**kwargs):
+        print("\n=== Model Configuration ===")
+        pprint(kwargs)
+        print("=============================\n")
         modeltype = kwargs.get('modeltype')
         #pop the modeltype from kwargs to avoid passing it to the loaders
         kwargs.pop('modeltype', None)
