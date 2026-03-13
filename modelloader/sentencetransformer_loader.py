@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 from pprint import pformat
 from typing import List, Union, Optional
 from ToRag.encode.sentencetransformer import sentencetransformermodel
-class SentenceTransformerLoader(BaseLoader):
+class sentencetransformerLoader(BaseLoader):
 
     def load(self, model_name: str, **kwargs):
         logger.info("Loading encoder with configuration:\n%s", pformat(kwargs))
