@@ -10,6 +10,8 @@ class ModelLoaderManager:
         self.ebdloaders['llamacpp'] = loader
     def loadModel(self,**kwargs):
         modeltype = kwargs.get('modeltype')
+        #pop the modeltype from kwargs to avoid passing it to the loaders
+        kwargs.pop('modeltype', None)
         if modeltype == 'sentencetransformer':
             loader = self.ebdloaders.get('sentencetransformer')
             if loader:
