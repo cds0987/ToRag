@@ -6,7 +6,7 @@ class ModelLoaderManager:
     def register_sentencetransformer_loader(self, loader):
         self.ebdloaders['sentencetransformer'] = loader
 
-    def register_llamacpp_loader(self, loader):
+    def register_llamacppebd_loader(self, loader):
         self.ebdloaders['llamacpp'] = loader
     def loadModel(self,**kwargs):
         modeltype = kwargs.get('modeltype')
