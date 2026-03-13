@@ -9,12 +9,12 @@ from .model import encodeModel
 class llamacppModel(encodeModel):
     def __init__(
         self,
-        model, **kwargs
+        model: Llama, **kwargs
     ):
         """
         Professional text embedding wrapper.
         Args:
-            model: Llama from pretrained
+            model: llama_cpp.llama.Llama model
         """
         super().__init__(model, **kwargs)
     def textencode(
