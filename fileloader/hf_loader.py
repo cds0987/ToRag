@@ -2,7 +2,7 @@ from datasets import load_dataset
 from .base_loader import BaseLoader
 
 
-class HuggingFaceLoader(BaseLoader):
+class hfdatasetLoader(BaseLoader):
 
     def load(self, dataset_name, split="train", **kwargs):
 
@@ -14,4 +14,5 @@ class HuggingFaceLoader(BaseLoader):
         yield dataset
 from .load import loader_manager
 # Register the loader
-loader_manager.register_hf_loader(HuggingFaceLoader())
+loader_manager.register_hf_loader(hfdatasetLoader())
+

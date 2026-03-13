@@ -3,33 +3,21 @@ import logging
 from pprint import pformat
 
 logger = logging.getLogger(__name__)
-
-def loadencoder(**kwargs):
-    logger.info("Loading LlamaCpp model with configuration:\n%s", pformat(kwargs))
-    kwargs['embedding'] = True
-    model = Llama.from_pretrained(**kwargs)
-    return model
-
-
-
 from typing import List, Union, Optional
 import numpy as np
 from .model import encodeModel
-class textencode(encodeModel):
+class llamacppModel(encodeModel):
     def __init__(
         self,
-        model_name: str, **kwargs
+        model, **kwargs
     ):
         """
         Professional text embedding wrapper.
         Args:
-            model: model name or SentenceTransformer instance
-            device: cpu / cuda / mps
+            model: Llama from pretrained
         """
-
-        super().__init__(model_name, **kwargs)
-        self.model = loadencoder(**kwargs)
-    def encode(
+        super().__init__(model, **kwargs)
+    def textencode(
         self,
         documents: Union[str, List[str]],
         **kwargs,

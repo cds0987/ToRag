@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
 class encodeModel(ABC):
-    def __init__(self, modelname,*args, **kwargs):
+    def __init__(self, model,*args, **kwargs):
         """
         model: model name or model instance
         kwargs: additional args passed to model loading function
         """
-        self.modelname = modelname
+        self.model = model
     @abstractmethod
-    def encode(self,*args, **kwargs):
+    def textencode(self,*args, **kwargs):
         pass
