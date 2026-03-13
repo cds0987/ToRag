@@ -21,4 +21,4 @@ class tsvLoader(FileLoader):
 
 from .load import loader_manager
 # Register the loader
-loader_manager.register_loader(tsvLoader())
+loader_manager.register_file_loader(tsvLoader())

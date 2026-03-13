@@ -18,4 +18,4 @@ class excelLoader(FileLoader):
 
 from .load import loader_manager
 # Register the loader
-loader_manager.register_loader(excelLoader())
+loader_manager.register_file_loader(excelLoader())

@@ -26,4 +26,4 @@ class pdfLoader(FileLoader):
 
 from .load import loader_manager
 # Register the loader
-loader_manager.register_loader(pdfLoader())
+loader_manager.register_file_loader(pdfLoader())

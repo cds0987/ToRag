@@ -24,4 +24,4 @@ class htmlLoader(FileLoader):
         
 from .load import loader_manager
 # Register the loader
-loader_manager.register_loader(htmlLoader())
+loader_manager.register_file_loader(htmlLoader())

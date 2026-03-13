@@ -14,4 +14,4 @@ class HuggingFaceLoader(BaseLoader):
         yield dataset
 from .load import loader_manager
 # Register the loader
-loader_manager.register_loader(HuggingFaceLoader())
+loader_manager.register_hf_loader(HuggingFaceLoader())
