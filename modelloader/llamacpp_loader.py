@@ -3,7 +3,7 @@ import numpy as np
 try:
   from llama_cpp import Llama
 except ImportError:
-  raise ImportError("llama_cpp library is required for llamacppLoader. Please install it with `pip install llama-cpp-python`.")
+  raise ImportError("llama_cpp library is required for llamacppLoader. Please install it with `pip install llama-cpp-python` or never use llamacppLoader else unexpected behavior.")
   Llama = None
 from .base_loader import BaseLoader
 from ToRag.encode.llamacpp import llamacppModel
