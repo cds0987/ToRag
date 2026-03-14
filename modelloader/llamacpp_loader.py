@@ -1,6 +1,10 @@
 from typing import List, Union, Optional
 import numpy as np
-from llama_cpp import Llama
+try:
+  from llama_cpp import Llama
+except ImportError:
+  raise ImportError("llama_cpp library is required for llamacppLoader. Please install it with `pip install llama-cpp-python`.")
+  Llama = None
 from .base_loader import BaseLoader
 from ToRag.encode.llamacpp import llamacppModel
 class llamacppLoader(BaseLoader):
