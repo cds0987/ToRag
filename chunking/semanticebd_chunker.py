@@ -276,60 +276,75 @@ class ClusterSemanticChunker(SemanticChunker):
         cluster_model=None,
         max_chunk_size: int = 5
     ):
-        self.encode = encode
-        self.max_chunk_size = max_chunk_size
+        super().__init__(encode)
         self.cluster_model = cluster_model
+        self.max_chunk_size = max_chunk_size
 
     def _build_cluster_model(self, n_clusters):
 
         if self.cluster_model is not None:
-            return self.cluster_model
 
-        # default fallback
+            model = self.cluster_model
+
+            # adjust cluster count dynamically if possible
+            if hasattr(model, "n_clusters"):
+                model.set_params(n_clusters=n_clusters)
+
+            return model
+
         return KMeans(n_clusters=n_clusters, random_state=42)
 
     def split(self, documents: Sequence[str]) -> Iterable[chunk]:
 
-        sentences_per_doc = []
-        all_sentences = []
+        sentences_per_doc, embeddings = self._encode_documents(documents)
 
-        for doc in documents:
-            sents = self._split_sentences(doc)
-            sentences_per_doc.append(sents)
-            all_sentences.extend(sents)
+        global_index = 0
 
-        if not all_sentences:
-            return []
+        for doc_id, sentences in enumerate(sentences_per_doc):
 
-        embeddings = np.asarray(self.encode(all_sentences))
+            if not sentences:
+                continue
 
-        n_clusters = max(1, len(all_sentences) // self.max_chunk_size)
+            n_sent = len(sentences)
 
-        clustering = self._build_cluster_model(n_clusters)
+            # slice embeddings belonging to this document
+            doc_embeddings = embeddings[global_index: global_index + n_sent]
 
-        labels = clustering.fit_predict(embeddings)
+            global_index += n_sent
 
-        clusters = defaultdict(list)
+            n_clusters = max(1, n_sent // self.max_chunk_size)
 
-        for idx, label in enumerate(labels):
-            clusters[label].append((idx, all_sentences[idx]))
+            clustering = self._build_cluster_model(n_clusters)
 
-        chunk_id = 0
+            labels = clustering.fit_predict(doc_embeddings)
 
-        for label, items in clusters.items():
+            clusters = defaultdict(list)
 
-            items.sort(key=lambda x: x[0])
+            for idx, label in enumerate(labels):
+                clusters[label].append((idx, sentences[idx]))
 
-            text = ". ".join(sentence for _, sentence in items)
+            chunk_id = 0
 
-            yield chunk(
-                doc_id=0,
-                chunk_id=chunk_id,
-                text=text,
-                metadata={
-                    "type": "cluster_semantic",
-                    "cluster": int(label)
-                }
+            # keep document order
+            sorted_clusters = sorted(
+                clusters.items(),
+                key=lambda x: min(i for i, _ in x[1])
             )
 
-            chunk_id += 1
+            for label, items in sorted_clusters:
+
+                items.sort(key=lambda x: x[0])
+
+                text = ". ".join(sentence for _, sentence in items)
+
+                yield chunk(
+                    doc_id=doc_id,
+                    chunk_id=chunk_id,
+                    text=text,
+                    metadata={
+                        "type": "cluster_semantic",
+                        "cluster": int(label)
+                    }
+                )
+
+                chunk_id += 1
