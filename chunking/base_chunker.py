@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from chunking.chunk import chunk
+from .chunk import chunk
 from typing import List
 
 
