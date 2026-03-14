@@ -10,6 +10,7 @@ def download_nltk_dependencies():
         "vader_lexicon",
         "maxent_ne_chunker",
         "words",
+        'punkt_tab'
     ]
 
     for pkg in packages:
