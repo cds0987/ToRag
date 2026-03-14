@@ -1,7 +1,6 @@
 try:
   from llama_cpp import Llama
 except ImportError:
-  print("llama_cpp library is required for llamacppModel. Please install it with `pip install llama-cpp-python` or never use llamacppModel else unexpected behavior.")
   Llama = None
 import logging
 from pprint import pformat

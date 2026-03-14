@@ -1,32 +1,37 @@
-from typing import Callable, Iterable, List, Sequence
+from typing import Callable, Iterable, List, Sequence,Tuple
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from .base_chunker import BaseChunker
 from .chunk import chunk
-
+from nltk.tokenize import sent_tokenize
 
 # Type alias for embedding function
 EncodeFn = Callable[[Sequence[str]], Sequence[Sequence[float]]]
 
-
+from .utils import download_nltk_dependencies
 class SemanticChunker(BaseChunker):
 
     def __init__(self, encode: EncodeFn, threshold: float = 0.75) -> None:
         """
-        Args:
-            encode: Callable embedding function that converts
-                    List[str] -> embeddings (2D array-like)
-            threshold: similarity threshold for semantic splitting
+        Args
+        ----
+        encode:
+            Embedding function that maps:
+            Sequence[str] -> embeddings
+
+        threshold:
+            Cosine similarity threshold for semantic split
         """
         self.encode = encode
         self.threshold = threshold
+        download_nltk_dependencies()
 
     def _split_sentences(self, text: str) -> List[str]:
         """
         Basic sentence splitter.
         """
-        return [s.strip() for s in text.split(".") if s.strip()]
+        return sent_tokenize(text)
 
     def similarity(
         self,
@@ -38,36 +43,70 @@ class SemanticChunker(BaseChunker):
         """
         return float(cosine_similarity([a], [b])[0][0])
 
+    def _encode_documents(
+        self,
+        documents: Sequence[str]
+    ) -> Tuple[List[List[str]], np.ndarray]:
+        """
+        Split all documents into sentences and encode them in one batch.
+
+        Returns
+        -------
+        sentences_per_doc:
+            List of sentence lists per document
+
+        embeddings:
+            Embeddings for ALL sentences
+        """
+
+        sentences_per_doc: List[List[str]] = []
+        all_sentences: List[str] = []
+
+        for doc in documents:
+            sentences = self._split_sentences(doc)
+            sentences_per_doc.append(sentences)
+            all_sentences.extend(sentences)
+
+        if not all_sentences:
+            return sentences_per_doc, np.empty((0, 0))
+
+        embeddings = np.asarray(self.encode(all_sentences))
+
+        return sentences_per_doc, embeddings
+
     def split(self, documents: Sequence[str]) -> Iterable[chunk]:
 
-        for doc_id, doc in enumerate(documents):
+        sentences_per_doc, embeddings = self._encode_documents(documents)
 
-            sentences: List[str] = self._split_sentences(doc)
+        global_index = 0
+
+        for doc_id, sentences in enumerate(sentences_per_doc):
 
             if not sentences:
                 continue
 
-            embeddings = np.asarray(self.encode(sentences))
-
             current_chunk: List[str] = []
-            chunk_id: int = 0
+            chunk_id = 0
 
             for i, sentence in enumerate(sentences):
 
                 current_chunk.append(sentence)
 
                 if i == len(sentences) - 1:
+
                     yield chunk(
                         doc_id=doc_id,
                         chunk_id=chunk_id,
                         text=". ".join(current_chunk),
                         metadata={"type": "semantic"}
                     )
+
+                    global_index += 1
                     break
 
-                sim: float = self.similarity(
-                    embeddings[i],
-                    embeddings[i + 1]
+                sim = self.similarity(
+                    embeddings[global_index],
+                    embeddings[global_index + 1]
                 )
 
                 if sim < self.threshold:
@@ -84,3 +123,213 @@ class SemanticChunker(BaseChunker):
 
                     chunk_id += 1
                     current_chunk = []
+
+                global_index += 1
+
+
+
+class MeanCumulativeSemanticChunker(SemanticChunker):
+   def split(self, documents: Sequence[str]) -> Iterable[chunk]:
+
+    sentences_per_doc, embeddings = self._encode_documents(documents)
+
+    global_index = 0
+
+    for doc_id, sentences in enumerate(sentences_per_doc):
+
+        if not sentences:
+            continue
+
+        current_chunk: List[str] = []
+        current_embeddings: List[np.ndarray] = []
+
+        chunk_id = 0
+
+        for i, sentence in enumerate(sentences):
+
+            current_chunk.append(sentence)
+            current_embeddings.append(embeddings[global_index])
+
+            # last sentence → flush
+            if i == len(sentences) - 1:
+
+                yield chunk(
+                    doc_id=doc_id,
+                    chunk_id=chunk_id,
+                    text=". ".join(current_chunk),
+                    metadata={"type": "semantic"}
+                )
+
+                global_index += 1
+                break
+
+            # compute cumulative embedding
+            chunk_embedding = np.mean(current_embeddings, axis=0)
+
+            next_embedding = embeddings[global_index + 1]
+
+            sim = self.similarity(
+                chunk_embedding,
+                next_embedding
+            )
+
+            if sim < self.threshold:
+
+                yield chunk(
+                    doc_id=doc_id,
+                    chunk_id=chunk_id,
+                    text=". ".join(current_chunk),
+                    metadata={
+                        "type": "semantic",
+                        "similarity_break": sim
+                    }
+                )
+
+                chunk_id += 1
+                current_chunk = []
+                current_embeddings = []
+
+            global_index += 1
+
+
+
+from typing import Iterable, Sequence, List
+import numpy as np
+
+
+class CumulativeEcdSemanticChunker(SemanticChunker):
+
+    def __init__(
+        self,
+        encode,
+        threshold: float = 0.75
+    ):
+        super().__init__(encode, threshold)
+
+    def split(self, documents: Sequence[str]) -> Iterable[chunk]:
+
+        sentences_per_doc, embeddings = self._encode_documents(documents)
+
+        global_index = 0
+
+        for doc_id, sentences in enumerate(sentences_per_doc):
+
+            if not sentences:
+                continue
+
+            current_chunk: List[str] = []
+            chunk_id = 0
+
+            for i, sentence in enumerate(sentences):
+
+                current_chunk.append(sentence)
+
+                # flush last sentence
+                if i == len(sentences) - 1:
+
+                    yield chunk(
+                        doc_id=doc_id,
+                        chunk_id=chunk_id,
+                        text=". ".join(current_chunk),
+                        metadata={"type": "semantic"}
+                    )
+
+                    global_index += 1
+                    break
+
+                # cumulative encoding of current chunk
+                chunk_text = ". ".join(current_chunk)
+                chunk_embedding = np.asarray(
+                    self.encode([chunk_text])
+                )[0]
+
+                next_embedding = embeddings[global_index + 1]
+
+                sim = self.similarity(chunk_embedding, next_embedding)
+
+                if sim < self.threshold:
+
+                    yield chunk(
+                        doc_id=doc_id,
+                        chunk_id=chunk_id,
+                        text=". ".join(current_chunk),
+                        metadata={
+                            "type": "semantic",
+                            "similarity_break": sim
+                        }
+                    )
+
+                    chunk_id += 1
+                    current_chunk = []
+
+                global_index += 1
+
+
+from sklearn.cluster import KMeans, MiniBatchKMeans, AgglomerativeClustering
+from collections import defaultdict
+
+class ClusterSemanticChunker(SemanticChunker):
+
+    def __init__(
+        self,
+        encode: EncodeFn,
+        cluster_model=None,
+        max_chunk_size: int = 5
+    ):
+        self.encode = encode
+        self.max_chunk_size = max_chunk_size
+        self.cluster_model = cluster_model
+
+    def _build_cluster_model(self, n_clusters):
+
+        if self.cluster_model is not None:
+            return self.cluster_model
+
+        # default fallback
+        return KMeans(n_clusters=n_clusters, random_state=42)
+
+    def split(self, documents: Sequence[str]) -> Iterable[chunk]:
+
+        sentences_per_doc = []
+        all_sentences = []
+
+        for doc in documents:
+            sents = self._split_sentences(doc)
+            sentences_per_doc.append(sents)
+            all_sentences.extend(sents)
+
+        if not all_sentences:
+            return []
+
+        embeddings = np.asarray(self.encode(all_sentences))
+
+        n_clusters = max(1, len(all_sentences) // self.max_chunk_size)
+
+        clustering = self._build_cluster_model(n_clusters)
+
+        labels = clustering.fit_predict(embeddings)
+
+        clusters = defaultdict(list)
+
+        for idx, label in enumerate(labels):
+            clusters[label].append((idx, all_sentences[idx]))
+
+        chunk_id = 0
+
+        for label, items in clusters.items():
+
+            items.sort(key=lambda x: x[0])
+
+            text = ". ".join(sentence for _, sentence in items)
+
+            yield chunk(
+                doc_id=0,
+                chunk_id=chunk_id,
+                text=text,
+                metadata={
+                    "type": "cluster_semantic",
+                    "cluster": int(label)
+                }
+            )
+
+            chunk_id += 1
