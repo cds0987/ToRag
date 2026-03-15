@@ -4,7 +4,9 @@ import warnings
 from .utils import get_device
 from typing import List, Union, Optional
 import torch
-import numpy as np        
+import numpy as np 
+from tqdm import tqdm
+       
 class jinaitokenencode(BaseModel):
     def __init__(
         self,
@@ -30,12 +32,12 @@ class jinaitokenencode(BaseModel):
         batch_size = kwargs.get("batch_size", 32)
         max_length = kwargs.get("max_length", 512)
         task = kwargs.get("task", "retrieval.query")
+        show_progress = kwargs.get("show_progress", True)
 
         all_embeddings = []
 
         try:
 
-            # resolve task adapter once
             try:
                 task_id = self.model._adaptation_map[task]
             except Exception:
@@ -44,8 +46,17 @@ class jinaitokenencode(BaseModel):
                     self._task_warning_printed = True
                 task_id = None
 
-            # batch loop
-            for start in range(0, len(texts), batch_size):
+            iterator = range(0, len(texts), batch_size)
+
+            if show_progress:
+                iterator = tqdm(
+                    iterator,
+                    desc="Encoding",
+                    colour="green",
+                    unit="batch"
+                )
+
+            for start in iterator:
 
                 batch_texts = texts[start:start + batch_size]
 
@@ -89,9 +100,7 @@ class jinaitokenencode(BaseModel):
                 self._error_printed = True
 
             embeddings = None
-        try:
-            torch.cuda.empty_cache()
-        except Exception as e:
-            print(f"Error clearing CUDA cache: {e}")
+
         return embeddings
+
         
