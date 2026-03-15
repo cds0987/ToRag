@@ -6,7 +6,7 @@ class jinAImodelLoader(BaseLoader):
 
     def load(self, model_name: str, **kwargs):
         kwargs["model_name"] = model_name
-        model =  jinaitokenencode(model_name, **kwargs)
+        model =  jinaitokenencode(**kwargs)
         return tokenencode(model)
     
     
