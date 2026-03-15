@@ -5,8 +5,7 @@ from .utils import get_device
 from typing import List, Union, Optional
 import torch
 import numpy as np 
-from tqdm import tqdm
-       
+from tqdm.auto import tqdm       
 class jinaitokenencode(BaseModel):
     def __init__(
         self,
@@ -52,8 +51,10 @@ class jinaitokenencode(BaseModel):
                 iterator = tqdm(
                     iterator,
                     desc="Encoding",
+                    unit="batch",
                     colour="green",
-                    unit="batch"
+                    dynamic_ncols=True,
+                    total=(len(texts) + batch_size - 1) // batch_size
                 )
 
             for start in iterator:
