@@ -34,7 +34,7 @@ class sentencetransformermodel(encodeModel):
         if isinstance(documents, str):
             documents = [documents]
         try:
-          with torch.no_grad():
+          with torch.inference_mode():
             embeddings = self.model.encode(
             documents,
             convert_to_numpy = True,
