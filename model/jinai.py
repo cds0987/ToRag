@@ -26,11 +26,13 @@ class jinaitokenencode(BaseModel):
             texts = [texts]
 
         try:
+            max_length = kwargs.get("max_length", 512)
             inputs = self.tokenizer(
                 texts,
                 return_tensors="pt",
                 padding=True,
-                truncation=True
+                truncation=True,
+                max_length=max_length
             )
 
             inputs = {k: v.to(self.device) for k, v in inputs.items()}

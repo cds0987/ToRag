@@ -11,13 +11,13 @@ from pprint import pprint
 class sentencetransformerLoader(BaseLoader):
 
     def load(self, model_name: str, **kwargs):
-        loadtype = kwargs.get("loadmode", "default")
+        loadmode = kwargs.get("loadmode", "default")
         # Remove loadtype from kwargs to avoid passing it to the model loading functions
         kwargs.pop("loadmode", None)
-        if loadtype == "unsloth":
+        if loadmode == "unsloth":
             return self._load_unsloth(model_name, **kwargs)
 
-        elif loadtype == "default":
+        elif loadmode == "default":
             return self._load_sentence_transformer(model_name, **kwargs)
     def _load_unsloth(self, model_name: str, **kwargs):
 
@@ -33,7 +33,11 @@ class sentencetransformerLoader(BaseLoader):
     def _load_sentence_transformer(self, model_name: str, **kwargs):
 
         kwargs["model_name"] = model_name
+        max_seq_length = kwargs.get("max_seq_length", 512)
+        #pop max_seq_length from kwargs to avoid passing it to fit sentence transformer library
+        kwargs.pop("max_seq_length", None)
         model = SentenceTransformer(**kwargs)
+        model.max_seq_length = max_seq_length
         return  sentencetransformermodel(model, **kwargs)
 
 # Register the loader
