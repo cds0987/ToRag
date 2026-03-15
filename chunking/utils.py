@@ -18,5 +18,3 @@ def download_nltk_dependencies():
             nltk.data.find(pkg)
         except LookupError:
             nltk.download(pkg)
-
-download_nltk_dependencies()

@@ -38,4 +38,4 @@ class sentencetransformerLoader(BaseLoader):
 
 # Register the loader
 from .load import loader_manager
-loader_manager.register_sentencetransformer_loader(sentencetransformerLoader())
+loader_manager.register_encode(sentencetransformerLoader(), name="sentencetransformer")

@@ -43,6 +43,9 @@ class sentencetransformermodel(encodeModel):
         except Exception as e:
             logger.error(f"Error encoding documents: {e}")
             pass
-        torch.cuda.empty_cache()
+        try:
+            torch.cuda.empty_cache()
+        except Exception as e:
+            print(f"Error clearing CUDA cache: {e}")
         return embeddings
     

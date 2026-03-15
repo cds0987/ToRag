@@ -10,6 +10,7 @@ from nltk.tokenize import sent_tokenize
 EncodeFn = Callable[[Sequence[str]], Sequence[Sequence[float]]]
 
 from .utils import download_nltk_dependencies
+download_nltk_dependencies()
 class SemanticChunker(BaseChunker):
 
     def __init__(self, encode: EncodeFn, threshold: float = 0.75) -> None:
@@ -25,7 +26,7 @@ class SemanticChunker(BaseChunker):
         """
         self.encode = encode
         self.threshold = threshold
-        download_nltk_dependencies()
+        
 
     def _split_sentences(self, text: str) -> List[str]:
         """

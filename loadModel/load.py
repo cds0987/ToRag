@@ -4,11 +4,13 @@ class ModelLoaderManager:
     def __init__(self):
         self.ebdloaders = {}
 
-    def register_sentencetransformer_loader(self, loader):
-        self.ebdloaders['sentencetransformer'] = loader
+    def register_encode(self, loader, name=None):
+        if name:
+            self.ebdloaders[name] = loader
+        else:
+            # Use the loader's class name as the default name
+            self.ebdloaders[loader.__class__.__name__.lower()] = loader
 
-    def register_llamacppebd_loader(self, loader):
-        self.ebdloaders['llamacpp'] = loader
     def loadModel(self,**kwargs):
         print("\n=== Model Configuration ===")
         pprint(kwargs)
