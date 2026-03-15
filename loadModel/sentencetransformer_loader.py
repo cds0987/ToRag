@@ -32,7 +32,7 @@ class sentencetransformerLoader(BaseLoader):
 
     def _load_sentence_transformer(self, model_name: str, **kwargs):
 
-        kwargs["model_name"] = model_name
+        kwargs["model_name_or_path"] = model_name
         max_seq_length = kwargs.get("max_seq_length", 512)
         #pop max_seq_length from kwargs to avoid passing it to fit sentence transformer library
         kwargs.pop("max_seq_length", None)
