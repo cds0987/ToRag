@@ -11,7 +11,7 @@ from pprint import pprint
 class sentencetransformerLoader(BaseLoader):
 
     def load(self, model_name: str, **kwargs):
-        loadtype = kwargs.get("loadtype", "default")
+        loadtype = kwargs.get("loadmode", "default")
         # Remove loadtype from kwargs to avoid passing it to the model loading functions
         kwargs.pop("loadtype", None)
         if loadtype == "unsloth":
