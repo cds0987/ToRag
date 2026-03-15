@@ -18,14 +18,9 @@ class ModelLoaderManager:
         modeltype = kwargs.get('modeltype')
         #pop the modeltype from kwargs to avoid passing it to the loaders
         kwargs.pop('modeltype', None)
-        if modeltype == 'sentencetransformer':
-            loader = self.ebdloaders.get('sentencetransformer')
-            if loader:
-                return loader.load(**kwargs)
-        elif modeltype == 'llamacpp':
-            loader = self.ebdloaders.get('llamacpp')
-            if loader:
-                return loader.load(**kwargs)
+        loader = self.ebdloaders.get(modeltype)
+        if loader:
+            return loader.load(**kwargs)
         return None
  
  # GLOBAL INSTANCE
