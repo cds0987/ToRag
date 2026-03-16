@@ -53,7 +53,7 @@ class jinaitokenencode(BaseModel):
                     desc="Encoding",
                     unit="batch",
                     colour="green",
-                    ncols=1400,
+                    ncols=1000,
                     total=(len(texts) + batch_size - 1) // batch_size
                 )
 
