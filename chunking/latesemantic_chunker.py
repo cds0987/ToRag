@@ -143,8 +143,7 @@ class LateSemanticChunker(BaseChunker):
         n_sent = len(sentences)
 
         n_clusters = max(1, round(n_sent / self.max_chunk_size)) if kwargs.get("n_clusters") is None else kwargs["n_clusters"]
-        clustering = self.cluster_model
-        labels = clustering.fit_predict(sent_embeddings,n_clusters = n_clusters)
+        labels = self.cluster_model.fit_predict(sent_embeddings,n_clusters = n_clusters)
 
         clusters = defaultdict(list)
 
