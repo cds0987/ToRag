@@ -35,8 +35,15 @@ class LateSemanticChunker(BaseChunker):
 
         if self.cluster_model is not None:
             model = self.cluster_model
-            if not hasattr(model, "n_clusters"):
+         # only adjust if the model supports n_clusters
+        if hasattr(model, "n_clusters"):
+
+            current = getattr(model, "n_clusters", None)
+
+            if current is None:
                 model.set_params(n_clusters=n_clusters)
+
+
             return model
 
         return KMeans(n_clusters=n_clusters, random_state=42)
