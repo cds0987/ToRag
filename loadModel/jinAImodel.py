@@ -2,7 +2,7 @@ from ToRag.encode.tokenencode import tokenencode
 from .base_loader import BaseLoader
 from ToRag.model.jinai import jinaitokenencode
 
-class jinAImodelLoader(BaseLoader):
+class jinAItokenencodeLoader(BaseLoader):
 
     def load(self, model_name: str, **kwargs):
         kwargs["model_name"] = model_name
@@ -12,4 +12,4 @@ class jinAImodelLoader(BaseLoader):
     
 # Register the loader
 from .load import loader_manager
-loader_manager.register_encode(jinAImodelLoader(), name="jinai")
+loader_manager.register_encode(jinAItokenencodeLoader(), name="jinaitokenencode")
