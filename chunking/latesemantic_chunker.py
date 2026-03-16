@@ -35,7 +35,7 @@ class LateSemanticChunker(BaseChunker):
 
         if self.cluster_model is not None:
             model = self.cluster_model
-            if hasattr(model, "n_clusters"):
+            if not hasattr(model, "n_clusters"):
                 model.set_params(n_clusters=n_clusters)
             return model
 

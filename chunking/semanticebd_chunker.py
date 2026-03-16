@@ -288,7 +288,7 @@ class ClusterSemanticChunker(SemanticChunker):
             model = self.cluster_model
 
             # adjust cluster count dynamically if possible
-            if hasattr(model, "n_clusters"):
+            if not hasattr(model, "n_clusters"):
                 model.set_params(n_clusters=n_clusters)
 
             return model
@@ -349,3 +349,6 @@ class ClusterSemanticChunker(SemanticChunker):
                 )
 
                 chunk_id += 1
+
+
+
