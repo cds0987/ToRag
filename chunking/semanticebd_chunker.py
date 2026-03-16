@@ -267,6 +267,7 @@ class CumulativeEcdSemanticChunker(SemanticChunker):
 
 from sklearn.cluster import KMeans, MiniBatchKMeans, AgglomerativeClustering
 from collections import defaultdict
+from .utils import ClusterStrategy
 
 class ClusterSemanticChunker(SemanticChunker):
 
@@ -277,19 +278,9 @@ class ClusterSemanticChunker(SemanticChunker):
         max_chunk_size: int = 5
     ):
         super().__init__(encode)
-        self.cluster_model = cluster_model
+        self.cluster_model = ClusterStrategy(cluster_model)
         self.max_chunk_size = max_chunk_size
 
-    def _build_cluster_model(self, n_clusters):
-
-        if self.cluster_model is not None:
-
-            model = self.cluster_model
-            return model
-            
-        return KMeans(n_clusters=n_clusters, random_state=42)
-    def build_clusters(self,n_clusters):
-        self.cluster_model.n_clusters = n_clusters
 
     def split(self, documents: Sequence[str], **kwargs) -> Iterable[chunk]:
 
@@ -310,10 +301,7 @@ class ClusterSemanticChunker(SemanticChunker):
             global_index += n_sent
 
             n_clusters = max(1, n_sent // self.max_chunk_size) if kwargs.get("n_clusters") is None else kwargs["n_clusters"]
-
-            clustering = self._build_cluster_model(n_clusters)
-
-            labels = clustering.fit_predict(doc_embeddings)
+            labels = self.cluster_model.fit_predict(doc_embeddings,n_clusters = n_clusters)
 
             clusters = defaultdict(list)
 
