@@ -9,8 +9,7 @@ from nltk.tokenize import sent_tokenize
 # Type alias for embedding function
 EncodeFn = Callable[[Sequence[str]], Sequence[Sequence[float]]]
 
-from .utils import download_nltk_dependencies
-download_nltk_dependencies()
+
 class SemanticChunker(BaseChunker):
 
     def __init__(self, encode: EncodeFn, threshold: float = 0.75) -> None:
@@ -286,21 +285,13 @@ class ClusterSemanticChunker(SemanticChunker):
         if self.cluster_model is not None:
 
             model = self.cluster_model
-
-        # only adjust if the model supports n_clusters
-        if hasattr(model, "n_clusters"):
-
-            current = getattr(model, "n_clusters", None)
-
-            if current is None:
-                model.set_params(n_clusters=n_clusters)
-
-
             return model
-
+            
         return KMeans(n_clusters=n_clusters, random_state=42)
+    def build_clusters(self,n_clusters):
+        self.cluster_model.n_clusters = n_clusters
 
-    def split(self, documents: Sequence[str]) -> Iterable[chunk]:
+    def split(self, documents: Sequence[str], **kwargs) -> Iterable[chunk]:
 
         sentences_per_doc, embeddings = self._encode_documents(documents)
 
@@ -318,7 +309,7 @@ class ClusterSemanticChunker(SemanticChunker):
 
             global_index += n_sent
 
-            n_clusters = max(1, n_sent // self.max_chunk_size)
+            n_clusters = max(1, n_sent // self.max_chunk_size) if kwargs.get("n_clusters") is None else kwargs["n_clusters"]
 
             clustering = self._build_cluster_model(n_clusters)
 

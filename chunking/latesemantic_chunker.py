@@ -6,7 +6,7 @@ from typing import Callable, Sequence, List, Tuple
 from nltk.tokenize import sent_tokenize
 from collections import defaultdict
 from sklearn.cluster import KMeans, MiniBatchKMeans, AgglomerativeClustering
-
+from .utils import ClusterStrategy
 
 class LateSemanticChunker(BaseChunker):
 
@@ -23,30 +23,13 @@ class LateSemanticChunker(BaseChunker):
         self.encode = encode
         self.tokenizer = tokenizer
         self.threshold = threshold
-        self.cluster_model = cluster_model
+        self.cluster_model = ClusterStrategy(cluster_model)
         self.max_chunk_size = max_chunk_size
         self.min_sentences = min_sentences
         self.max_sentences = max_sentences
 
     def similarity(self, a, b):
         return float(cosine_similarity([a], [b])[0][0])
-
-    def _build_cluster_model(self, n_clusters):
-
-        if self.cluster_model is not None:
-            model = self.cluster_model
-         # only adjust if the model supports n_clusters
-        if hasattr(model, "n_clusters"):
-
-            current = getattr(model, "n_clusters", None)
-
-            if current is None:
-                model.set_params(n_clusters=n_clusters)
-
-
-            return model
-
-        return KMeans(n_clusters=n_clusters, random_state=42)
 
     def _sentence_embeddings(self, token_embeddings, spans):
 
@@ -155,15 +138,13 @@ class LateSemanticChunker(BaseChunker):
 
         return sent_embeddings, sentences
 
-    def clustering(self, sent_embeddings, sentences):
+    def clustering(self, sent_embeddings, sentences,**kwargs):
 
         n_sent = len(sentences)
 
-        n_clusters = max(1, round(n_sent / self.max_chunk_size))
-
-        clustering = self._build_cluster_model(n_clusters)
-
-        labels = clustering.fit_predict(sent_embeddings)
+        n_clusters = max(1, round(n_sent / self.max_chunk_size)) if kwargs.get("n_clusters") is None else kwargs["n_clusters"]
+        clustering = self.cluster_model
+        labels = clustering.fit_predict(sent_embeddings,n_clusters = n_clusters)
 
         clusters = defaultdict(list)
 
@@ -186,7 +167,7 @@ class LateSemanticChunker(BaseChunker):
 
         return ordered_sentences
 
-    def split(self, documents):
+    def split(self, documents,**kwargs):
 
         for doc_id, doc in enumerate(documents):
 
@@ -209,7 +190,8 @@ class LateSemanticChunker(BaseChunker):
 
             ordered_sentences = self.clustering(
                 sent_embeddings,
-                sentences
+                sentences,
+                **kwargs
             )
 
             current_chunk = []
