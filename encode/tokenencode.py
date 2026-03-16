@@ -1,7 +1,7 @@
 from .model import encodeModel
 from typing import List, Union, Optional
 import numpy as np
-class tokenencode(encodeModel):
+class tokenencodeModel(encodeModel):
     def __init__(
         self,
         model, **kwargs

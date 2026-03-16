@@ -4,14 +4,15 @@ class ModelLoaderManager:
     def __init__(self):
         self.model = {}
 
-    def register_encode(self, loader, name=None):
-        if self.model.get("encode") is None:
-            self.model["encode"] = {}
+    def register_(self, loader, name=None,type = "encode"):
+        
+        if self.model.get(type) is None:
+            self.model[type] = {}
         if name:
-            self.model["encode"][name] = loader
+            self.model[type][name] = loader
         else:
             # Use the loader's class name as the default name
-            self.model["encode"][loader.__class__.__name__.lower()] = loader
+            self.model[type][loader.__class__.__name__.lower()] = loader
 
     def loadModel(self,**kwargs):
         print("\n=== Model Configuration ===")

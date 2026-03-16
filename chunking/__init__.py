@@ -1,0 +1,2 @@
+from .utils import download_nltk_dependencies
+download_nltk_dependencies()
