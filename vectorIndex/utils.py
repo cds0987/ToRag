@@ -95,3 +95,10 @@ def load_faiss_hf(repo_id: str, filename: str):
     index = faiss.read_index(path)
 
     return index
+
+
+import faiss
+
+def get_faiss_min_points_per_centroid():
+    clus = faiss.Clustering(1, 1)  # dummy dims
+    return clus.min_points_per_centroid

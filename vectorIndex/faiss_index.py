@@ -15,7 +15,7 @@ class FaissIndex(VectorIndex):
         self.next_id = 0
         self.vectornormalize = kwargs.get("vectornormalize", False)
 
-    def delete(self, ids: List[str]):
+    def delete(self, ids: list[str]):
         pass
 
     def search(self, query_vector: np.ndarray, top_k: int = 5):
@@ -63,17 +63,85 @@ class FaissIndex(VectorIndex):
         else:
             # fallback (hiếm khi xảy ra)
             self.index.add(vectors)
+    # -------------------------
+    # search
+    # -------------------------
+    def search(self, query_vector: np.ndarray, top_k: int = 5,nprobe: int = None):
 
+        if self.index is None:
+            raise ValueError("Index is not initialized")
+        if nprobe is not None:
+            self.set_nprobe(nprobe)
+        if query_vector.ndim == 1:
+            query_vector = query_vector.reshape(1, -1)
+
+        if self.vectornormalize:
+            faiss.normalize_L2(query_vector)
+
+        D, I = self.index.search(query_vector.astype("float32"), top_k)
+
+        results = []
+
+        for row_ids, row_scores in zip(I, D):
+            row = []
+            for idx, score in zip(row_ids, row_scores):
+
+                if idx == -1:
+                    continue
+
+                sid = self.rev_id_map.get(idx)
+
+                # tránh lỗi do hole sau delete
+                if sid is None:
+                    continue
+
+                row.append({
+                    "id": sid,
+                    "score": float(score)
+                })
+
+            results.append(row)
+
+        return results
+    
+        # -------------------------
+    # delete
+    # -------------------------
+    def delete(self, ids: List[str]):
+
+        if self.index is None:
+            raise ValueError("Index is not initialized")
+
+        self._ensure_idmap2_safe()
+
+        remove_ids = []
+
+        for sid in ids:
+            int_id = self.id_map.get(sid)
+            if int_id is not None:
+                remove_ids.append(int_id)
+
+        if len(remove_ids) == 0:
+            return 0
+
+        remove_ids = np.array(remove_ids).astype("int64")
+
+        # FAISS remove (tạo hole, không compact)
+        self.index.remove_ids(remove_ids)
+
+        # cập nhật mapping (KHÔNG reindex)
+        for sid in ids:
+            int_id = self.id_map.pop(sid, None)
+            if int_id is not None:
+                self.rev_id_map.pop(int_id, None)
+
+        return len(remove_ids)
     # -------------------------
     # save
     # -------------------------
-    def save(self, index=None, directory=None, filename=None, path=None, **kwargs):
+    def save(self, index=None, directory=None, filename=None, **kwargs):
 
         local = kwargs.get("local", False)
-
-        if path is not None:
-            directory, filename = self._split_path(path)
-
         if index is None:
             index = self.index
 
