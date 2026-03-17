@@ -284,6 +284,22 @@ class IndexIVFPQ(FaissIndex):
             self._create_index()
 
     # -------------------------
+    # helper: ensure cp param
+    # -------------------------
+    def _ensure_min_points_per_centroid(self):
+
+        try:
+            inner_index = faiss.downcast_index(self.index.index)
+
+            if hasattr(inner_index, "cp"):
+                inner_index.cp.min_points_per_centroid = self.min_points_per_centroid
+            else:
+                print("[WARNING] Index does not support clustering params (cp)")
+
+        except Exception as e:
+            print(f"[WARNING] Cannot set min_points_per_centroid: {e}")
+
+    # -------------------------
     # create IVF-PQ index
     # -------------------------
     def _create_index(self):
@@ -295,7 +311,6 @@ class IndexIVFPQ(FaissIndex):
             quantizer = faiss.IndexFlatL2(self.dimension)
             metric = faiss.METRIC_L2
 
-        # ⚠️ nếu nlist None → dùng tạm 1 (sẽ rebuild khi train)
         nlist = self.nlist if self.nlist is not None else 1
 
         index = faiss.IndexIVFPQ(
@@ -307,10 +322,10 @@ class IndexIVFPQ(FaissIndex):
             metric
         )
 
-        # set clustering param
-        index.cp.min_points_per_centroid = self.min_points_per_centroid
-
         self.index = faiss.IndexIDMap2(index)
+
+        # 👇 ensure cp
+        self._ensure_min_points_per_centroid()
 
     # -------------------------
     # train
@@ -320,8 +335,6 @@ class IndexIVFPQ(FaissIndex):
         if self.vectornormalize:
             faiss.normalize_L2(vectors)
 
-        base = self.index.index  # unwrap IDMap2
-
         n = vectors.shape[0]
 
         # -------------------------
@@ -329,10 +342,9 @@ class IndexIVFPQ(FaissIndex):
         # -------------------------
         if self.nlist is None:
             self.nlist = max(int(n / self.min_points_per_centroid), 1)
-
             print(f"[INFO] Auto nlist = {self.nlist}")
 
-            # rebuild index với nlist mới
+            # rebuild index
             if self.vectornormalize:
                 quantizer = faiss.IndexFlatIP(self.dimension)
                 metric = faiss.METRIC_INNER_PRODUCT
@@ -349,18 +361,15 @@ class IndexIVFPQ(FaissIndex):
                 metric
             )
 
-            # set clustering param
-            new_index.cp.min_points_per_centroid = self.min_points_per_centroid
-
             self.index = faiss.IndexIDMap2(new_index)
-            base = self.index.index
 
-        # đảm bảo clustering param luôn đúng
-        base.cp.min_points_per_centroid = self.min_points_per_centroid
+        # 👇 ensure cp before train
+        self._ensure_min_points_per_centroid()
 
-        # -------------------------
-        # train
-        # -------------------------
-        if not base.is_trained:
-            base.train(vectors)
+        # unwrap & train
+        inner_index = faiss.downcast_index(self.index.index)
+
+        if not inner_index.is_trained:
+            inner_index.train(vectors)
             self.trained = True
+
