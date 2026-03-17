@@ -1,6 +1,4 @@
-from ast import Dict, List
-from email.mime import base
-
+from typing import List, Dict
 import faiss
 import numpy as np
 from .base import VectorIndex
@@ -12,12 +10,60 @@ class FaissIndex(VectorIndex):
 
     def __init__(self, *args, **kwargs):
         self.index = None
+        self.id_map = {}
+        self.rev_id_map = {}
+        self.next_id = 0
+        self.vectornormalize = kwargs.get("vectornormalize", False)
+
     def delete(self, ids: List[str]):
         pass
+
     def search(self, query_vector: np.ndarray, top_k: int = 5):
         pass
+
+    # -------------------------
+    # add
+    # -------------------------
     def add(self, ids: List[str], vectors: np.ndarray, metadata: List[Dict] = None):
-        pass
+
+        if self.index is None:
+            raise ValueError("Index is not initialized")
+
+        # normalize nếu dùng cosine/IP
+        if self.vectornormalize:
+            faiss.normalize_L2(vectors)
+
+        base = self.index.index if hasattr(self.index, "index") else self.index
+
+        # chỉ check nếu index cần train
+        if hasattr(base, "is_trained") and not base.is_trained:
+            raise RuntimeError("Index must be trained before adding vectors")
+
+        # đảm bảo có IDMap2
+        self._ensure_idmap2_safe()
+
+        int_ids = []
+
+        for sid in ids:
+            if sid in self.id_map:
+                int_id = self.id_map[sid]
+            else:
+                int_id = self.next_id
+                self.id_map[sid] = int_id
+                self.rev_id_map[int_id] = sid
+                self.next_id += 1
+
+            int_ids.append(int_id)
+
+        int_ids = np.array(int_ids).astype("int64")
+
+        # thêm vector vào index
+        if hasattr(self.index, "add_with_ids"):
+            self.index.add_with_ids(vectors, int_ids)
+        else:
+            # fallback (hiếm khi xảy ra)
+            self.index.add(vectors)
+
     # -------------------------
     # save
     # -------------------------
@@ -37,16 +83,56 @@ class FaissIndex(VectorIndex):
             save_faiss_hf(index, directory, filename)
 
     # -------------------------
+    # _ensure_idmap2_safe
+    # -------------------------
+    def _ensure_idmap2_safe(self):
+
+       if isinstance(self.index, faiss.IndexIDMap2):
+          return
+
+       if self.index.ntotal == 0:
+          self.index = faiss.IndexIDMap2(self.index)
+          return
+
+       print("[WARNING] Rebuilding index to add IDMap2...")
+
+       ntotal = self.index.ntotal
+       vectors_old = self.index.reconstruct_n(0, ntotal)
+
+       base = faiss.clone_index(self.index)
+       base.reset()
+
+       new_index = faiss.IndexIDMap2(base)
+
+       old_ids = np.arange(ntotal).astype("int64")
+       new_index.add_with_ids(vectors_old, old_ids)
+
+       self.index = new_index
+
+       # rebuild id map
+       self.id_map = {}
+       self.rev_id_map = {}
+
+       for i in range(ntotal):
+           sid = str(i)
+           self.id_map[sid] = i
+           self.rev_id_map[i] = sid
+
+       self.next_id = ntotal
+
+    # -------------------------
     # set_nprobe
     # -------------------------
     def set_nprobe(self, nprobe: int):
         base = self.index.index
         base.nprobe = nprobe
+
     # -------------------------
     # get ntotal
     # -------------------------
     def ntotal(self):
        return self.index.ntotal
+
     # -------------------------
     # load
     # -------------------------
@@ -64,7 +150,9 @@ class FaissIndex(VectorIndex):
                     f"Index not found in both local and HuggingFace Hub: {e}"
                 )
 
-        index = faiss.IndexIDMap2(index) if not isinstance(index, faiss.IndexIDMap2) else index
+        self.index = index
+        self._ensure_idmap2_safe()
+
         base = index.index if isinstance(index, faiss.IndexIDMap2) else index
 
         # restore config from index
@@ -74,13 +162,20 @@ class FaissIndex(VectorIndex):
         self.nbits = base.pq.nbits
 
         self.trained = base.is_trained
-        self.index = index
 
         # detect metric
         if base.metric_type == faiss.METRIC_INNER_PRODUCT:
             self.vectornormalize = True
         else:
             self.vectornormalize = False
+
+
+            
+            
+            
+            
+            
+            
             
 class IndexIVFPQ(FaissIndex):
 
