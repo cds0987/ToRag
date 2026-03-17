@@ -5,7 +5,7 @@ from .base import VectorIndex
 from .utils import save_faiss_hf, load_faiss_hf, load_faiss_local, save_faiss_local
 
 import os
-
+from .utils import get_printable_index
 class FaissIndex(VectorIndex):
 
     def __init__(self, *args, **kwargs):
@@ -14,13 +14,6 @@ class FaissIndex(VectorIndex):
         self.rev_id_map = {}
         self.next_id = 0
         self.vectornormalize = kwargs.get("vectornormalize", False)
-
-    def delete(self, ids: list[str]):
-        pass
-
-    def search(self, query_vector: np.ndarray, top_k: int = 5):
-        pass
-
     # -------------------------
     # add
     # -------------------------
@@ -192,8 +185,7 @@ class FaissIndex(VectorIndex):
     # set_nprobe
     # -------------------------
     def set_nprobe(self, nprobe: int):
-        base = self.index.index
-        ivf_index = faiss.downcast_index(base)
+        ivf_index = get_printable_index(self.index)
         ivf_index.nprobe = nprobe
 
     # -------------------------
@@ -368,7 +360,7 @@ class IndexIVFPQ(FaissIndex):
         self._ensure_min_points_per_centroid()
 
         # unwrap & train
-        inner_index = faiss.downcast_index(self.index.index)
+        inner_index = get_printable_index(self.index)
 
         if not inner_index.is_trained:
             inner_index.train(vectors)

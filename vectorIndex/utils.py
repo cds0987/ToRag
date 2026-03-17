@@ -102,3 +102,13 @@ import faiss
 def get_faiss_min_points_per_centroid():
     clus = faiss.Clustering(1, 1)  # dummy dims
     return clus.min_points_per_centroid
+
+def get_printable_index(index):
+    # Nếu là IndexIDMap/IndexIDMap2, lấy lõi bên trong trước
+    if hasattr(index, "index"):
+        actual_index = index.index
+    else:
+        actual_index = index
+        
+    # Ép kiểu xuống lớp con thực sự (IVF, PQ, Flat...)
+    return faiss.downcast_index(actual_index)
