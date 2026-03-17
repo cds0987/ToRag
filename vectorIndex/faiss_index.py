@@ -243,17 +243,20 @@ class FaissIndex(VectorIndex):
             
             
             
-            
+from .utils import get_faiss_min_points_per_centroid            
             
 class IndexIVFPQ(FaissIndex):
 
     def __init__(self,
         dimension: int = 384,
-        nlist: int = 100,
+        nlist: int = None,
         m: int = 8,
-        nbits: int = 8,vectornormalize = True, 
-        directory=None,filename = None):
-        
+        nbits: int = 8,
+        vectornormalize: bool = True,
+        min_points_per_centroid: int = None,
+        directory=None,
+        filename=None):
+
         self.index = None
         self.dimension = dimension
         self.nlist = nlist
@@ -261,39 +264,103 @@ class IndexIVFPQ(FaissIndex):
         self.nbits = nbits
         self.trained = False
 
+        # clustering param
+        self.min_points_per_centroid = (
+            min_points_per_centroid
+            if min_points_per_centroid is not None
+            else get_faiss_min_points_per_centroid()
+        )
+
         # id mapping
         self.id_map = {}
         self.rev_id_map = {}
         self.next_id = 0
+
         self.vectornormalize = vectornormalize
-        if directory  and filename:
+
+        if directory and filename:
             self.load(directory, filename)
         else:
             self._create_index()
-            
+
     # -------------------------
     # create IVF-PQ index
     # -------------------------
     def _create_index(self):
+
         if self.vectornormalize:
-           quantizer = faiss.IndexFlatIP(self.dimension)
+            quantizer = faiss.IndexFlatIP(self.dimension)
+            metric = faiss.METRIC_INNER_PRODUCT
         else:
             quantizer = faiss.IndexFlatL2(self.dimension)
+            metric = faiss.METRIC_L2
+
+        # ⚠️ nếu nlist None → dùng tạm 1 (sẽ rebuild khi train)
+        nlist = self.nlist if self.nlist is not None else 1
+
         index = faiss.IndexIVFPQ(
             quantizer,
             self.dimension,
-            self.nlist,
+            nlist,
             self.m,
-            self.nbits, 
-            faiss.METRIC_INNER_PRODUCT if self.vectornormalize else faiss.METRIC_L2
+            self.nbits,
+            metric
         )
 
+        # set clustering param
+        index.cp.min_points_per_centroid = self.min_points_per_centroid
+
         self.index = faiss.IndexIDMap2(index)
-        
+
+    # -------------------------
+    # train
+    # -------------------------
     def train(self, vectors: np.ndarray):
+
         if self.vectornormalize:
-           faiss.normalize_L2(vectors)
+            faiss.normalize_L2(vectors)
+
         base = self.index.index  # unwrap IDMap2
+
+        n = vectors.shape[0]
+
+        # -------------------------
+        # auto compute nlist
+        # -------------------------
+        if self.nlist is None:
+            self.nlist = max(int(n / self.min_points_per_centroid), 1)
+
+            print(f"[INFO] Auto nlist = {self.nlist}")
+
+            # rebuild index với nlist mới
+            if self.vectornormalize:
+                quantizer = faiss.IndexFlatIP(self.dimension)
+                metric = faiss.METRIC_INNER_PRODUCT
+            else:
+                quantizer = faiss.IndexFlatL2(self.dimension)
+                metric = faiss.METRIC_L2
+
+            new_index = faiss.IndexIVFPQ(
+                quantizer,
+                self.dimension,
+                self.nlist,
+                self.m,
+                self.nbits,
+                metric
+            )
+
+            # set clustering param
+            new_index.cp.min_points_per_centroid = self.min_points_per_centroid
+
+            self.index = faiss.IndexIDMap2(new_index)
+            base = self.index.index
+
+        # đảm bảo clustering param luôn đúng
+        base.cp.min_points_per_centroid = self.min_points_per_centroid
+
+        # -------------------------
+        # train
+        # -------------------------
         if not base.is_trained:
-           base.train(vectors)
-           self.trained = True
+            base.train(vectors)
+            self.trained = True
