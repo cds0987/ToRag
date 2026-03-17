@@ -193,7 +193,8 @@ class FaissIndex(VectorIndex):
     # -------------------------
     def set_nprobe(self, nprobe: int):
         base = self.index.index
-        base.nprobe = nprobe
+        ivf_index = faiss.downcast_index(base)
+        ivf_index.nprobe = nprobe
 
     # -------------------------
     # get ntotal
