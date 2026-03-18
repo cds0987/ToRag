@@ -167,32 +167,82 @@ from typing import Optional
 
 
 class FaissIndexIVF(FaissIndex):
-    def train(self, vectors: np.ndarray):
 
+    def __init__(
+        self,
+        dimension=384,
+        nlist=None,
+        metric="ip",   # "ip" or "l2"
+        use_idmap=True,
+        vectornormalize=True,
+        min_points_per_centroid=None,
+    ):
+        super().__init__(vectornormalize=vectornormalize)
+
+        self.dimension = dimension
+        self.nlist = nlist
+        self.metric = metric
+        self.use_idmap = use_idmap
+
+        self.min_points_per_centroid = (
+            min_points_per_centroid
+            if min_points_per_centroid is not None
+            else get_faiss_min_points_per_centroid()
+        )
+
+        self.index = None
+
+    # -------------------------
+    # metric + quantizer
+    # -------------------------
+    def _get_metric(self):
+        return faiss.METRIC_INNER_PRODUCT if self.metric == "ip" else faiss.METRIC_L2
+
+    def _create_quantizer(self):
+        metric = self._get_metric()
+
+        if metric == faiss.METRIC_INNER_PRODUCT:
+            return faiss.IndexFlatIP(self.dimension)
+        return faiss.IndexFlatL2(self.dimension)
+
+    # -------------------------
+    # FACTORY (override this)
+    # -------------------------
+    def _build_ivf(self, quantizer, metric, nlist):
+        raise NotImplementedError
+
+    # -------------------------
+    # main creator
+    # -------------------------
+    def _create_index(self):
+        metric = self._get_metric()
+        quantizer = self._create_quantizer()
+
+        nlist = self.nlist if self.nlist is not None else 1
+
+        base = self._build_ivf(quantizer, metric, nlist)
+
+        if self.use_idmap:
+            self.index = faiss.IndexIDMap2(base)
+        else:
+            self.index = base
+
+    # -------------------------
+    # train (shared)
+    # -------------------------
+    def train(self, vectors: np.ndarray):
         if self.vectornormalize:
             faiss.normalize_L2(vectors)
-        self._ensure_min_points_per_centroid()
+
         if self.nlist is None:
-            self.nlist = max(
-                int(len(vectors) / self.min_points_per_centroid), 1
-            )
+            self.nlist = max(int(len(vectors) / self.min_points_per_centroid), 1)
             print(f"[INFO] Auto nlist = {self.nlist}")
             self._create_index()
+
         base = self._unwrap_index(self.index)
+
+        if hasattr(base, "cp"):
+            base.cp.min_points_per_centroid = self.min_points_per_centroid
+
         if not base.is_trained:
             base.train(vectors.astype("float32"))
-    # -------------------------
-    # helper: clustering param
-    # -------------------------
-    def _ensure_min_points_per_centroid(self):
-
-        try:
-            base = self._unwrap_index(self.index)
-
-            if hasattr(base, "cp"):
-                base.cp.min_points_per_centroid = self.min_points_per_centroid
-            else:
-                print("[WARNING] Index does not support clustering params")
-
-        except Exception as e:
-            print(f"[WARNING] Cannot set min_points_per_centroid: {e}")
