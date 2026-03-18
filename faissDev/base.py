@@ -39,20 +39,6 @@ class FaissIndex(VectorIndex):
            ivf_index.nprobe = nprobe
         # -------------------------
     # -------------------------
-    # train
-    # -------------------------
-    def train(self, vectors: np.ndarray):
-
-        if self.index is None:
-            raise ValueError("Index is not initialized")
-
-        if self.vectornormalize:
-            faiss.normalize_L2(vectors)
-        base = self._unwrap_index(self.index)
-        if not base.is_trained:
-            base.train(vectors.astype("float32"))
-
-    # -------------------------
     # add
     # -------------------------
     def add(self, ids: np.ndarray, vectors: np.ndarray):
@@ -158,3 +144,42 @@ class FaissIndex(VectorIndex):
             self.vectornormalize = True
         else:
             self.vectornormalize = False
+            
+            
+#Ivf subclass
+from .utils import get_faiss_min_points_per_centroid
+import faiss
+import numpy as np
+from typing import Optional
+
+
+class FaissIndexIVF(FaissIndex):
+    def train(self, vectors: np.ndarray):
+
+        if self.vectornormalize:
+            faiss.normalize_L2(vectors)
+        self._ensure_min_points_per_centroid()
+        if self.nlist is None:
+            self.nlist = max(
+                int(len(vectors) / self.min_points_per_centroid), 1
+            )
+            print(f"[INFO] Auto nlist = {self.nlist}")
+            self._create_index()
+        base = self._unwrap_index(self.index)
+        if not base.is_trained:
+            base.train(vectors.astype("float32"))
+    # -------------------------
+    # helper: clustering param
+    # -------------------------
+    def _ensure_min_points_per_centroid(self):
+
+        try:
+            base = self._unwrap_index(self.index)
+
+            if hasattr(base, "cp"):
+                base.cp.min_points_per_centroid = self.min_points_per_centroid
+            else:
+                print("[WARNING] Index does not support clustering params")
+
+        except Exception as e:
+            print(f"[WARNING] Cannot set min_points_per_centroid: {e}")

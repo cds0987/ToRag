@@ -3,9 +3,9 @@ import numpy as np
 from typing import Optional
 
 from .utils import get_faiss_min_points_per_centroid            
-from .base import FaissIndex
+from .base import FaissIndexIVF
 
-class IndexIVFSQ(FaissIndex):
+class IndexIVFSQ(FaissIndexIVF):
 
     def __init__(
         self,
@@ -47,27 +47,3 @@ class IndexIVFSQ(FaissIndex):
             self.qtype,
             metric
         )
-
-        self._ensure_cp()
-
-    def train(self, vectors: np.ndarray):
-
-        if self.vectornormalize:
-            faiss.normalize_L2(vectors)
-
-        if self.nlist is None:
-            self.nlist = max(
-                int(len(vectors) / self.min_points_per_centroid), 1
-            )
-            print(f"[INFO] Auto nlist = {self.nlist}")
-            self._create_index()
-
-        if not self.index.is_trained:
-            self.index.train(vectors.astype("float32"))
-
-    def _ensure_cp(self):
-        try:
-            if hasattr(self.index, "cp"):
-                self.index.cp.min_points_per_centroid = self.min_points_per_centroid
-        except:
-            pass

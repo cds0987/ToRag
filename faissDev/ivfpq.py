@@ -3,10 +3,10 @@ import numpy as np
 from typing import Optional
 
 from .utils import get_faiss_min_points_per_centroid            
-from .base import FaissIndex
+from .base import FaissIndexIVF
 
 
-class IndexIVFPQ(FaissIndex):
+class IndexIVFPQ(FaissIndexIVF):
 
     def __init__(
         self,
@@ -73,46 +73,3 @@ class IndexIVFPQ(FaissIndex):
             self.nbits,
             metric
         )
-        self._ensure_min_points_per_centroid()
-
-    # -------------------------
-    # train
-    # -------------------------
-    def train(self, vectors: np.ndarray):
-
-        if self.vectornormalize:
-            faiss.normalize_L2(vectors)
-
-        n = vectors.shape[0]
-
-        # -------------------------
-        # auto compute nlist
-        # -------------------------
-        if self.nlist is None:
-            self.nlist = max(int(n / self.min_points_per_centroid), 1)
-            print(f"[INFO] Auto nlist = {self.nlist}")
-
-            # rebuild index
-            self._create_index()
-
-        self._ensure_min_points_per_centroid()
-
-        if not self.index.is_trained:
-            self.index.train(vectors.astype("float32"))
-            self.trained = True
-
-    # -------------------------
-    # helper: clustering param
-    # -------------------------
-    def _ensure_min_points_per_centroid(self):
-
-        try:
-            base = self._unwrap_index(self.index)
-
-            if hasattr(base, "cp"):
-                base.cp.min_points_per_centroid = self.min_points_per_centroid
-            else:
-                print("[WARNING] Index does not support clustering params")
-
-        except Exception as e:
-            print(f"[WARNING] Cannot set min_points_per_centroid: {e}")
