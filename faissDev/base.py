@@ -38,6 +38,19 @@ class FaissIndex(VectorIndex):
         if hasattr(ivf_index, "nprobe"):
            ivf_index.nprobe = nprobe
         # -------------------------
+            # -------------------------
+    # train
+    # -------------------------
+    def train(self, vectors: np.ndarray):
+
+        if self.index is None:
+            raise ValueError("Index is not initialized")
+
+        if self.vectornormalize:
+            faiss.normalize_L2(vectors)
+        base = self._unwrap_index(self.index)
+        if not base.is_trained:
+            base.train(vectors.astype("float32"))
     # -------------------------
     # add
     # -------------------------
