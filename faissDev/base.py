@@ -48,9 +48,9 @@ class FaissIndex(VectorIndex):
 
         if self.vectornormalize:
             faiss.normalize_L2(vectors)
-
-        if not self.index.is_trained:
-            self.index.train(vectors.astype("float32"))
+        base = self._unwrap_index(self.index)
+        if not base.is_trained:
+            base.train(vectors.astype("float32"))
 
     # -------------------------
     # add
