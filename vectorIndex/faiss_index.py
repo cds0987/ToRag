@@ -229,7 +229,21 @@ class FaissIndex(VectorIndex):
             self.vectornormalize = True
         else:
             self.vectornormalize = False
+    # -------------------------
+    # helper: ensure cp param
+    # -------------------------
+    def _ensure_min_points_per_centroid(self):
 
+        try:
+            inner_index = faiss.downcast_index(self.index.index)
+
+            if hasattr(inner_index, "cp"):
+                inner_index.cp.min_points_per_centroid = self.min_points_per_centroid
+            else:
+                print("[WARNING] Index does not support clustering params (cp)")
+
+        except Exception as e:
+            print(f"[WARNING] Cannot set min_points_per_centroid: {e}")
 
             
             
@@ -276,21 +290,7 @@ class IndexIVFPQ(FaissIndex):
         else:
             self._create_index()
 
-    # -------------------------
-    # helper: ensure cp param
-    # -------------------------
-    def _ensure_min_points_per_centroid(self):
 
-        try:
-            inner_index = faiss.downcast_index(self.index.index)
-
-            if hasattr(inner_index, "cp"):
-                inner_index.cp.min_points_per_centroid = self.min_points_per_centroid
-            else:
-                print("[WARNING] Index does not support clustering params (cp)")
-
-        except Exception as e:
-            print(f"[WARNING] Cannot set min_points_per_centroid: {e}")
 
     # -------------------------
     # create IVF-PQ index
