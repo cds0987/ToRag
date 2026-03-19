@@ -13,7 +13,7 @@ class FaissIndex(VectorIndex):
     def __init__(self, *args, **kwargs):
         self.index = None
         self.vectornormalize = kwargs.get("vectornormalize", False)
-
+        
     # -------------------------
     # internal helper
     # -------------------------
@@ -123,9 +123,9 @@ class FaissIndex(VectorIndex):
             save_faiss_hf(index, directory, filename)
 
     # -------------------------
-    # load
+    # load,freeze it now later separately work on it
     # -------------------------
-    def load(self, directory=None, filename=None, path=None):
+    def load(self, directory=None, filename=None, **kwargs):
 
         try:
             index = load_faiss_local(directory, filename)
@@ -173,7 +173,6 @@ class FaissIndexIVF(FaissIndex):
         dimension=384,
         nlist=None,
         metric="ip",   # "ip" or "l2"
-        use_idmap=True,
         vectornormalize=True,
         min_points_per_centroid=None,
     ):
@@ -182,7 +181,6 @@ class FaissIndexIVF(FaissIndex):
         self.dimension = dimension
         self.nlist = nlist
         self.metric = metric
-        self.use_idmap = use_idmap
 
         self.min_points_per_centroid = (
             min_points_per_centroid
@@ -221,11 +219,7 @@ class FaissIndexIVF(FaissIndex):
         nlist = self.nlist if self.nlist is not None else 1
 
         base = self._build_ivf(quantizer, metric, nlist)
-
-        if self.use_idmap:
-            self.index = faiss.IndexIDMap2(base)
-        else:
-            self.index = base
+        self.index = base
 
     # -------------------------
     # train (shared)
@@ -237,7 +231,7 @@ class FaissIndexIVF(FaissIndex):
         if self.nlist is None:
             self.nlist = max(int(len(vectors) / self.min_points_per_centroid), 1)
             print(f"[INFO] Auto nlist = {self.nlist}")
-            self._create_index()
+        self._create_index()
 
         base = self._unwrap_index(self.index)
 
