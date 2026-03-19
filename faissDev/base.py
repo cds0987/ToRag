@@ -188,7 +188,7 @@ class FaissIndexIVF(FaissIndex):
             else get_faiss_min_points_per_centroid()
         )
 
-        self.index = None
+        self._create_index()
 
     # -------------------------
     # metric + quantizer
