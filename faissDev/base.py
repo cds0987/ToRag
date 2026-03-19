@@ -213,6 +213,8 @@ class FaissIndexIVF(FaissIndex):
     # main creator
     # -------------------------
     def _create_index(self):
+        if self.index is not None:
+            return  # already created
         metric = self._get_metric()
         quantizer = self._create_quantizer()
 
