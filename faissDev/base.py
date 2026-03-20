@@ -212,7 +212,12 @@ class FaissIndexIVF(FaissIndex):
     # -------------------------
     def _build_ivf(self, quantizer, metric, nlist):
         raise NotImplementedError
-
+           
+    def setmin_points_per_centroid(self,):
+        min_points_per_centroid = self.min_points_per_centroid if self.min_points_per_centroid is not None else get_faiss_min_points_per_centroid()
+        base = self._unwrap_index(self.index)
+        if hasattr(base, "cp"):
+            base.cp.min_points_per_centroid = min_points_per_centroid
     # -------------------------
     # main creator
     # -------------------------
@@ -233,12 +238,7 @@ class FaissIndexIVF(FaissIndex):
             self.index = faiss.IndexPreTransform(pca, core_index)
         else:
             self.index = core_index    
-        self.setmin_points_per_centroid(self.min_points_per_centroid)   
-    def setmin_points_per_centroid(self,):
-        min_points_per_centroid = self.min_points_per_centroid if self.min_points_per_centroid is not None else get_faiss_min_points_per_centroid()
-        base = self._unwrap_index(self.index)
-        if hasattr(base, "cp"):
-            base.cp.min_points_per_centroid = min_points_per_centroid
+        self.setmin_points_per_centroid()
     # -------------------------
     # train (shared)
     # -------------------------
