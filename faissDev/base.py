@@ -176,7 +176,7 @@ class FaissIndexIVF(FaissIndex):
         metric="ip",   # "ip" or "l2"
         vectornormalize=True,
         min_points_per_centroid=None,
-        pca_dim: Optional[int] = None,
+        pca_dim: Optional[int] = None,**kwargs
     ):
         super().__init__(vectornormalize=vectornormalize)
 

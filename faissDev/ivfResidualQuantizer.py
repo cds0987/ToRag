@@ -7,40 +7,31 @@ class IndexIVFResidualQuantizer(FaissIndexIVF):
 
     def __init__(
         self,
-        dimension: int = 384,
-        nlist: Optional[int] = None,
-        M: int = 8,              # number of residual stages
-        nbits: int = 8,          # bits per stage
-        metric: str = "ip",      # "ip" or "l2"
-        vectornormalize: bool = True,
-        min_points_per_centroid: Optional[int] = None,
+        M: int = 8,          # residual stages
+        nbits: int = 8,      # bits per stage
+        **kwargs             # 🔥 catch ALL shared args (dimension, pca_dim, etc.)
     ):
+        super().__init__(**kwargs)
+
+        # private / specific params
         self.M = M
         self.nbits = nbits
 
-        super().__init__(
-            dimension=dimension,
-            nlist=nlist,
-            metric=metric,
-            vectornormalize=vectornormalize,
-            min_points_per_centroid=min_points_per_centroid,
-        )
-
     # -------------------------
-    # IVF + Residual Quantizer (FIXED)
+    # IVF + Residual Quantizer
     # -------------------------
     def _build_ivf(self, quantizer, metric, nlist):
 
         index = faiss.IndexIVFResidualQuantizer(
             quantizer,
-            self.dimension,
+            quantizer.d,   # ✅ correct dimension
             nlist,
-            self.M,        # ✅ correct
-            self.nbits,    # ✅ correct
+            self.M,
+            self.nbits,
             metric
         )
 
-        # 🔥 optional but recommended
+        # recommended
         index.by_residual = True
 
         return index
