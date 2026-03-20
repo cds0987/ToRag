@@ -106,8 +106,7 @@ class FaissIndex(VectorIndex):
             raise ValueError("Index is not initialized")
 
         ids = ids.astype("int64")
-
-        return self.index.remove_ids(ids)
+        self.index.remove_ids(ids)
 
     # -------------------------
     # save
@@ -177,13 +176,14 @@ class FaissIndexIVF(FaissIndex):
         metric="ip",   # "ip" or "l2"
         vectornormalize=True,
         min_points_per_centroid=None,
+        pca_dim: Optional[int] = None,
     ):
         super().__init__(vectornormalize=vectornormalize)
 
         self.dimension = dimension
         self.nlist = nlist
         self.metric = metric
-
+        self.pca_dim = pca_dim
         self.min_points_per_centroid = (
             min_points_per_centroid
             if min_points_per_centroid is not None
@@ -198,12 +198,14 @@ class FaissIndexIVF(FaissIndex):
     def _get_metric(self):
         return faiss.METRIC_INNER_PRODUCT if self.metric == "ip" else faiss.METRIC_L2
 
-    def _create_quantizer(self):
+    def _create_quantizer(self, dim=None):
         metric = self._get_metric()
+        dim = dim if dim is not None else self.dimension
+
 
         if metric == faiss.METRIC_INNER_PRODUCT:
-            return faiss.IndexFlatIP(self.dimension)
-        return faiss.IndexFlatL2(self.dimension)
+            return faiss.IndexFlatIP(dim)
+        return faiss.IndexFlatL2(dim)
 
     # -------------------------
     # FACTORY (override this)
@@ -218,13 +220,25 @@ class FaissIndexIVF(FaissIndex):
         if self.index is not None:
             return  # already created
         metric = self._get_metric()
-        quantizer = self._create_quantizer()
-
         nlist = self.nlist if self.nlist is not None else 1
+                # 🔥 decide working dimension
+        core_dim = self.pca_dim if self.pca_dim is not None else self.dimension
+        quantizer = self._create_quantizer(core_dim)
 
-        base = self._build_ivf(quantizer, metric, nlist)
-        self.index = base
+        core_index = self._build_ivf(quantizer, metric, nlist)
 
+        # 🔥 wrap with PCA if needed
+        if self.pca_dim is not None:
+            pca = faiss.PCAMatrix(self.dimension, self.pca_dim)
+            self.index = faiss.IndexPreTransform(pca, core_index)
+        else:
+            self.index = core_index    
+        self.setmin_points_per_centroid(self.min_points_per_centroid)   
+    def setmin_points_per_centroid(self,):
+        min_points_per_centroid = self.min_points_per_centroid if self.min_points_per_centroid is not None else get_faiss_min_points_per_centroid()
+        base = self._unwrap_index(self.index)
+        if hasattr(base, "cp"):
+            base.cp.min_points_per_centroid = min_points_per_centroid
     # -------------------------
     # train (shared)
     # -------------------------
@@ -236,11 +250,5 @@ class FaissIndexIVF(FaissIndex):
             self.nlist = max(int(len(vectors) / self.min_points_per_centroid), 1)
             print(f"[INFO] Auto nlist = {self.nlist}")
         self._create_index()
-
-        base = self._unwrap_index(self.index)
-
-        if hasattr(base, "cp"):
-            base.cp.min_points_per_centroid = self.min_points_per_centroid
-
-        if not base.is_trained:
-            base.train(vectors.astype("float32"))
+        if not self.index.is_trained:
+            self.index.train(vectors.astype("float32"))
