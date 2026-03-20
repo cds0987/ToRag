@@ -6,7 +6,7 @@ class IndexIVFFlat(FaissIndexIVF):
     def _build_ivf(self, quantizer, metric, nlist):
         return faiss.IndexIVFFlat(
             quantizer,
-            self.dimension,
+            quantizer.d,   # ✅ critical fix
             nlist,
             metric
         )

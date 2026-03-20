@@ -15,7 +15,7 @@ class IndexIVFPQR(FaissIndexIVF):
     def _build_ivf(self, quantizer, metric, nlist):
         return faiss.IndexIVFPQR(
             quantizer,
-            self.dimension,
+            quantizer.d,   # 🔥 critical fix
             nlist,
             self.m,
             self.nbits,

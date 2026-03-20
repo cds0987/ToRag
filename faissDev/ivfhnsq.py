@@ -8,21 +8,24 @@ class IndexIVF_HNSW(FaissIndexIVF):
         self.M = M
         self.efConstruction = efConstruction
 
-    def _create_quantizer(self):
+    # 🔥 dimension-aware quantizer
+    def _create_quantizer(self, dim=None):
         metric = self._get_metric()
+        dim = dim if dim is not None else self.dimension
 
         quantizer = faiss.IndexHNSWFlat(
-            self.dimension,
+            dim,
             self.M,
             metric
         )
         quantizer.hnsw.efConstruction = self.efConstruction
         return quantizer
 
+    # 🔥 dimension-safe IVF
     def _build_ivf(self, quantizer, metric, nlist):
         return faiss.IndexIVFFlat(
             quantizer,
-            self.dimension,
+            quantizer.d,   # 🔥 critical fix
             nlist,
             metric
         )

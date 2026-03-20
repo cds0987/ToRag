@@ -11,7 +11,7 @@ class IndexIVFSQ(FaissIndexIVF):
     def _build_ivf(self, quantizer, metric, nlist):
         return faiss.IndexIVFScalarQuantizer(
             quantizer,
-            self.dimension,
+            quantizer.d,   # 🔥 critical fix
             nlist,
             self.qtype,
             metric
