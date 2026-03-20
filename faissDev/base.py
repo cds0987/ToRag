@@ -71,8 +71,10 @@ class FaissIndex(VectorIndex):
             raise RuntimeError("Index must be trained before adding vectors")
 
         ids = ids.astype("int64")
-
-        self.index.add_with_ids(vectors.astype("float32"), ids)
+        try:
+            self.index.add_with_ids(vectors.astype("float32"), ids)
+        except Exception as e:
+            self.index.add(vectors.astype("float32"))
 
     # -------------------------
     # search

@@ -92,6 +92,17 @@ def faissIndexTogpu(faissIndex:FaissIndex, device: int = 0, res=None ):
    faissIndex.index,faissIndex.gpures   = FaissGPUUtils.to_gpu(faissIndex.index, device, res)
    
    
-def faissIndexTocpu(faissIndex:FaissIndex):
-   faissIndex.index = FaissGPUUtils.to_cpu(faissIndex.index)
-   faissIndex.gpures = None
+import gc
+
+def faissIndexTocpu(faissIndex: FaissIndex):
+    if hasattr(faissIndex, 'index') and FaissGPUUtils.is_gpu_index(faissIndex.index):
+        # 1. Convert to CPU
+        faissIndex.index = FaissGPUUtils.to_cpu(faissIndex.index)
+        
+        # 2. Explicitly delete the GPU resources
+        if hasattr(faissIndex, 'gpures'):
+            del faissIndex.gpures
+            faissIndex.gpures = None
+        
+        # 3. Force garbage collection to clean up the C++ pointers
+        gc.collect()
