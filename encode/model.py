@@ -7,6 +7,9 @@ class encodeModel(ABC):
         kwargs: additional args passed to model loading function
         """
         self.model = model
-    @abstractmethod
     def textencode(self,*args, **kwargs):
+        pass
+    def imgencode(self,*args, **kwargs):
+        pass
+    def encode(self,*args, **kwargs):
         pass

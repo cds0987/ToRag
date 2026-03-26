@@ -17,7 +17,6 @@ class FaissRetrieval(Retrieval):
         self.datamanager = datamanager        
     def search(self,
                queries: np.ndarray,
-               searchtype="textquery",
                index_kwargs=None,
                datamanager_kwargs=None
 ):
