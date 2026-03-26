@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 from pprint import pformat
 from typing import List, Union, Optional
-from ToRag.encode.sentencetransformer import sentencetransformermodel
+from ToRag.encode.sentencetransformer import SentenceTransformerModel
 from pprint import pprint
 
 class sentencetransformerLoader(BaseLoader):
@@ -35,7 +35,7 @@ class sentencetransformerLoader(BaseLoader):
             kwargs["load_in_16bit"] = False
 
         model = FastSentenceTransformer.from_pretrained(**kwargs)
-        return sentencetransformermodel(model, **kwargs)
+        return SentenceTransformerModel(model, **kwargs)
 
     def _load_sentence_transformer(self, model_name: str, **kwargs):
 
@@ -45,7 +45,7 @@ class sentencetransformerLoader(BaseLoader):
         kwargs.pop("max_seq_length", None)
         model = SentenceTransformer(**kwargs)
         model.max_seq_length = max_seq_length
-        return  sentencetransformermodel(model, **kwargs)
+        return  SentenceTransformerModel(model, **kwargs)
 
 # Register the loader
 from .load import loader_manager
