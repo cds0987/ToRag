@@ -1,8 +1,8 @@
 try:
    from unsloth import FastSentenceTransformer
-   loadFastSentenceTransformer = True
+   loadFastSentenceTransformer = 1
 except:
-    loadFastSentenceTransformer = False
+    loadFastSentenceTransformer = 0
 from sentence_transformers import SentenceTransformer
 from .base_loader import BaseLoader
 import logging
@@ -16,9 +16,9 @@ class sentencetransformerLoader(BaseLoader):
 
     def load(self, model_name: str, **kwargs):
         loadmode = kwargs.get("loadmode", "default")
-        if loadFastSentenceTransformer == False:
+        if loadFastSentenceTransformer == 0 and loadmode == "unsloth":
             print("Unsloth library not found, falling back to default SentenceTransformer loading.")
-            loadmode == "default"
+            loadmode = "default"
         # Remove loadtype from kwargs to avoid passing it to the model loading functions
         kwargs.pop("loadmode", None)
         if loadmode == "unsloth":
