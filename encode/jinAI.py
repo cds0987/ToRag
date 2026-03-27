@@ -1,7 +1,7 @@
 from .model import encodeModel
 from typing import List, Union, Optional
 import numpy as np
-class tokenencodeModel(encodeModel):
+class jinAIModel(encodeModel):
     def __init__(
         self,
         model, **kwargs
@@ -12,7 +12,7 @@ class tokenencodeModel(encodeModel):
             model: encodeModel instance,model must have tokenencode method that returns token-level embeddings
         """
         super().__init__(model, **kwargs)
-    def textencode(
+    def encode(
         self,
         documents: Union[str, List[str]],
         **kwargs,
@@ -24,4 +24,4 @@ class tokenencodeModel(encodeModel):
             **kwargs: additional args passed to model.textencode()
             output: np.ndarray of embeddings of each token in the document, shape (documents,num_tokens, embedding_dim)
         """
-        return self.model.tokenencode(documents, **kwargs)
+        return self.model.encode(documents, **kwargs)

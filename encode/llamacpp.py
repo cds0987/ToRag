@@ -20,7 +20,7 @@ class llamacppModel(encodeModel):
             model: llama_cpp.llama.Llama model
         """
         super().__init__(model, **kwargs)
-    def textencode(
+    def encode(
         self,
         documents: Union[str, List[str]],
         **kwargs,
