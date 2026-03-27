@@ -125,41 +125,6 @@ class FaissIndex(VectorIndex):
         else:
             save_faiss_hf(index, directory, filename)
             save_json_hf(metadata, repo_id=directory, filename=filename)
-        
-        
-
-    # -------------------------
-    # load,freeze it now later separately work on it
-    # -------------------------
-    def load(self, directory=None, filename=None, **kwargs):
-
-        try:
-            index = load_faiss_local(directory, filename)
-
-        except FileNotFoundError:
-            try:
-                index = load_faiss_hf(directory, filename)
-
-            except Exception as e:
-                raise FileNotFoundError(
-                    f"Index not found in both local and HuggingFace Hub: {e}"
-                )
-
-        self.index = index
-        base = index.index if isinstance(index, faiss.IndexIDMap2) else index
-
-        # restore config from index
-        self.dimension = base.d
-        self.nlist = base.nlist
-        self.m = base.pq.M
-        self.nbits = base.pq.nbits
-        self.trained = base.is_trained
-
-        # detect metric
-        if base.metric_type == faiss.METRIC_INNER_PRODUCT:
-            self.vectornormalize = True
-        else:
-            self.vectornormalize = False
             
             
 #Ivf subclass
