@@ -46,5 +46,6 @@ def load_faiss_index(directoryidx = None, fileidx = None,
     metadata = load_json_hf(directorymeta, filemeta)
     newfaissIndex = from_metadata(metadata)
     newfaissIndex.index = index
-    faissIndexTogpu(newfaissIndex, **kwargs)
+    if metadata['gpu']:
+        faissIndexTogpu(newfaissIndex, **kwargs)
     return newfaissIndex
