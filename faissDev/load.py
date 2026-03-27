@@ -45,7 +45,7 @@ def load_faiss_index(directoryidx = None, fileidx = None,
             )
     try:
         metadata = load_json_hf(directorymeta, filemeta)
-    except FileNotFoundError:
+    except:
         try:
             metadata = load_json_local(directorymeta, filemeta)
         except Exception as e:
