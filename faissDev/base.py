@@ -10,6 +10,7 @@ from .utils import (
     _get_metadata
     )
 from ToRag.Utils.saveFiletoHgface import save_json_hf
+from ToRag.Utils.savefileLocal import save_json_local
 class FaissIndex(VectorIndex):
 
     def __init__(self, *args, **kwargs):
@@ -117,13 +118,15 @@ class FaissIndex(VectorIndex):
 
         local = kwargs.get("local", False)
         index = self.index
-
+        metadata = _get_metadata(self)
         if local:
             save_faiss_local(index, directory, filename)
+            save_json_local(metadata, directory, filename)
         else:
             save_faiss_hf(index, directory, filename)
-        metadata = _get_metadata(self)
-        save_json_hf(metadata, repo_id=directory, filename=filename)
+            save_json_hf(metadata, repo_id=directory, filename=filename)
+        
+        
 
     # -------------------------
     # load,freeze it now later separately work on it
