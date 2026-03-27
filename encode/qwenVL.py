@@ -71,10 +71,13 @@ def build_qwen_vl_inputs(
 import torch
 from typing import List, Union
 from PIL import Image
-from Utils.iterior import create_iterior
-class QwenVLEncoder:
+from ToRag.Utils.iterior import create_iterior
+from .model import encodeModel
+
+class QwenVLEncoder(encodeModel):
 
     def __init__(self, model, tokenizer, device="cuda", batch_size=4, normalize=True):
+        super().__init__(model)
         self.model = model.eval()
         self.tokenizer = tokenizer
         self.device = device
