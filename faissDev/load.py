@@ -4,7 +4,7 @@ from .utils import (
     load_faiss_local
     )
 from ToRag.Utils.loadHgface import load_json_hf
-from ToRag.Utils.loadFileLocal import load_json_local
+from ToRag.Utils.loadFileLocal import FileLoader
 import inspect
 
 def filter_kwargs(cls, metadata: dict):
@@ -47,7 +47,7 @@ def load_faiss_index(directoryidx = None, fileidx = None,
         metadata = load_json_hf(directorymeta, filemeta)
     except:
         try:
-            metadata = load_json_local(directorymeta, filemeta)
+            metadata = FileLoader.load(directory=directorymeta, filename=filemeta)
         except Exception as e:
             raise FileNotFoundError(
                 f"Metadata not found in both local and HuggingFace Hub: {e}"

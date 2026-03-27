@@ -14,7 +14,7 @@ class docxLoader(FileLoader):
         text = "\n".join(p.text for p in doc.paragraphs)
 
         return {
-            "text": text,
+            "doc": doc,
             "source": path
         }
         
