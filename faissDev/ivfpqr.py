@@ -22,3 +22,6 @@ class IndexIVFPQR(FaissIndexIVF):
             self.m_refine,
             self.nbits_refine
         )
+
+from .registry import CLASS_REGISTRY
+CLASS_REGISTRY['IndexIVFPQR'] = IndexIVFPQR

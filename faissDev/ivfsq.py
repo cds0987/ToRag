@@ -16,3 +16,6 @@ class IndexIVFSQ(FaissIndexIVF):
             self.qtype,
             metric
         )
+
+from .registry import CLASS_REGISTRY
+CLASS_REGISTRY['IndexIVFSQ'] = IndexIVFSQ

@@ -25,3 +25,6 @@ class IndexIVFLocalSearchQuantizer(FaissIndexIVF):
             self.nbits,
             metric
         )
+
+from .registry import CLASS_REGISTRY
+CLASS_REGISTRY['IndexIVFLocalSearchQuantizer'] = IndexIVFLocalSearchQuantizer

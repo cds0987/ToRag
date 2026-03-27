@@ -35,3 +35,6 @@ class IndexIVFResidualQuantizer(FaissIndexIVF):
         index.by_residual = True
 
         return index
+
+from .registry import CLASS_REGISTRY
+CLASS_REGISTRY['IndexIVFResidualQuantizer'] = IndexIVFResidualQuantizer

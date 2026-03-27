@@ -43,3 +43,6 @@ class IndexFlat(FaissIndex):
             base = faiss.IndexFlatL2(self.dimension)
 
         self.index = faiss.IndexIDMap2(base)
+
+from .registry import CLASS_REGISTRY
+CLASS_REGISTRY['IndexFlat'] = IndexFlat

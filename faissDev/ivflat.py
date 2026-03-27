@@ -11,3 +11,5 @@ class IndexIVFFlat(FaissIndexIVF):
             metric
         )
 
+from .registry import CLASS_REGISTRY
+CLASS_REGISTRY['IndexIVFFlat'] = IndexIVFFlat

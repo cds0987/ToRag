@@ -29,3 +29,6 @@ class IndexIVF_HNSW(FaissIndexIVF):
             nlist,
             metric
         )
+
+from .registry import CLASS_REGISTRY
+CLASS_REGISTRY['IndexIVF_HNSW'] = IndexIVF_HNSW
