@@ -24,27 +24,35 @@ def _get_metadata(self):
         'gpu':True if self.gpu == 1 else False
     }
 
+
 def _prepare_index_for_saving(index, clone: bool = False):
     """
     Ensure index is CPU and safe to save.
 
-    Handles:
-    - GpuIndex
-    - IndexPreTransform (wrapped GPU)
-    - Any nested FAISS structure
+    Works for:
+    - CPU-only FAISS
+    - GPU FAISS
+    - Wrapped indexes (IndexPreTransform)
     """
-    # 🔥 ALWAYS convert to CPU before saving
-    if isinstance(index, faiss.GpuIndex):
-        index = faiss.index_gpu_to_cpu(index)
-    else:
-        # ⚠️ Important: handles wrapped GPU index (IndexPreTransform case)
+
+    # 🔥 Step 1: safely check if GPU support exists
+    has_gpu = hasattr(faiss, "index_gpu_to_cpu")
+
+    if has_gpu:
         try:
+            # this works for both:
+            # - real GpuIndex
+            # - wrapped GPU index (IndexPreTransform)
             index = faiss.index_gpu_to_cpu(index)
-        except:
-            pass  # already CPU
+        except Exception:
+            # already CPU or not a GPU index
+            pass
+
+    # 🔥 Step 2: optional clone (safe copy)
     if clone:
         index = faiss.clone_index(index)
-    return index  
+
+    return index
 
 
 
