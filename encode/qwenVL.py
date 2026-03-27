@@ -1,8 +1,7 @@
 from typing import List, Union, Tuple, Optional
 from PIL import Image
 import torch
-from ToRag.Utils.iterior import load_image
-
+from ToRag.Utils.image import load_image
 def build_qwen_vl_inputs(
     tokenizer,
     images: List[Union[str, Image.Image]],
