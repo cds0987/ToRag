@@ -43,7 +43,15 @@ def load_faiss_index(directoryidx = None, fileidx = None,
             raise FileNotFoundError(
                 f"Index not found in both local and HuggingFace Hub: {e}"
             )
-    metadata = load_json_hf(directorymeta, filemeta)
+    try:
+        metadata = load_json_hf(directorymeta, filemeta)
+    except FileNotFoundError:
+        try:
+            metadata = load_json_local(directorymeta, filemeta)
+        except Exception as e:
+            raise FileNotFoundError(
+                f"Metadata not found in both local and HuggingFace Hub: {e}"
+            )
     newfaissIndex = from_metadata(metadata)
     newfaissIndex.index = index
     if metadata['gpu']:
