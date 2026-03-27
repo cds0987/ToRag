@@ -21,6 +21,5 @@ class VectorIndex(ABC):
     def save(self, path: str):
         pass
 
-    @abstractmethod
     def load(self, path: str):
         pass
