@@ -5,7 +5,7 @@ except:
     loadFastVisionModel = 0
 from transformers import AutoProcessor, AutoModelForImageTextToText
 from .base_loader import BaseLoader
-from ToRag.encode.qwenVL import qwenVLModel
+from ToRag.encode.qwenVL import QwenVLEncoder
 
 import logging
 logger = logging.getLogger(__name__)
@@ -22,13 +22,13 @@ class QwenVLEncodeLoader(BaseLoader):
             kwargs["load_in_16bit"] = False
 
         model, tokenizer = FastVisionModel.from_pretrained(**kwargs)
-        return qwenVLModel(model, tokenizer)
+        return QwenVLEncoder(model, tokenizer)
     def _load_transformers(self, model_name: str, **kwargs):
 
         kwargs["model_name"] = model_name
         processor = AutoProcessor.from_pretrained(model_name, **kwargs)
         model = AutoModelForImageTextToText.from_pretrained(model_name, **kwargs)
-        return qwenVLModel(model, processor)
+        return QwenVLEncoder(model, processor)
     def load(self, model_name: str, **kwargs):
         loadmode = kwargs.get("loadmode", "default")
         if loadFastVisionModel == 0 and loadmode == "unsloth":
