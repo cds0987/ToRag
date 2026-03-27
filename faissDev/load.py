@@ -54,6 +54,7 @@ def load_faiss_index(directoryidx = None, fileidx = None,
             )
     newfaissIndex = from_metadata(metadata)
     newfaissIndex.index = index
-    if metadata['gpu']:
+    checkgpu = metadata['gpu'] if 'gpu' in metadata else False
+    if checkgpu:
         faissIndexTogpu(newfaissIndex, **kwargs)
     return newfaissIndex
