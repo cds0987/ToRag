@@ -16,4 +16,4 @@ class llamacppEncodeLoader(BaseLoader):
     
 # Register the loader
 from .load import loader_manager
-loader_manager.register_(llamacppEncodeLoader(), name="llamacpp", type="encode")
+loader_manager.register_(llamacppEncodeLoader(), modeltype="llamacpp", type="encode")

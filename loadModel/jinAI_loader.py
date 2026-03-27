@@ -12,4 +12,4 @@ class jinAIEncodeLoader(BaseLoader):
     
 # Register the loader
 from .load import loader_manager
-loader_manager.register_(jinAIEncodeLoader(), name="jinai", type="encode")
+loader_manager.register_(jinAIEncodeLoader(), modeltype="jinai", type="encode")

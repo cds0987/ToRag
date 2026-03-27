@@ -44,4 +44,4 @@ class QwenVLEncodeLoader(BaseLoader):
         
 # Register the loader
 from .load import loader_manager
-loader_manager.register_(QwenVLEncodeLoader(), name="qwenvl", type="encode")
+loader_manager.register_(QwenVLEncodeLoader(), modeltype="qwenvl", type="encode")
