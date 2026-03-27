@@ -21,6 +21,7 @@ def _get_metadata(self):
         "pca_dim": self.pca_dim,
         "vectornormalize": self.vectornormalize,
         "min_points_per_centroid": self.min_points_per_centroid,
+        'gpu':True if self.gpu == 1 else False
     }
 
 def _prepare_index_for_saving(index, clone: bool = False):

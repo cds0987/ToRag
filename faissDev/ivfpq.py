@@ -1,6 +1,6 @@
 import faiss       
 from .base import FaissIndexIVF
-
+from .registry import CLASS_REGISTRY
 
 class IndexIVFPQ(FaissIndexIVF):
 
@@ -18,3 +18,5 @@ class IndexIVFPQ(FaissIndexIVF):
             self.nbits,
             metric
         )
+
+CLASS_REGISTRY['IndexIVFPQ'] = IndexIVFPQ
