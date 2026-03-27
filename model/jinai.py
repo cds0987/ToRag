@@ -6,7 +6,7 @@ from typing import List, Union, Optional
 import torch
 import numpy as np 
 from tqdm.auto import tqdm
-from Utils.iterior import create_iterior       
+from ToRag.Utils.iterior import create_iterior       
 class Jinai(BaseModel):
     def __init__(
         self,
