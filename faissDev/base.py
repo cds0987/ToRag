@@ -6,14 +6,16 @@ from .utils import (
     save_faiss_hf,
     load_faiss_hf,
     load_faiss_local,
-    save_faiss_local
+    save_faiss_local,
+    _get_metadata
     )
+from ToRag.Utils.saveFiletoHgface import save_json_hf
 class FaissIndex(VectorIndex):
 
     def __init__(self, *args, **kwargs):
         self.index = None
         self.vectornormalize = kwargs.get("vectornormalize", False)
-        
+        self.gpu = 0
     # -------------------------
     # internal helper
     # -------------------------
@@ -111,17 +113,17 @@ class FaissIndex(VectorIndex):
     # -------------------------
     # save
     # -------------------------
-    def save(self, index=None, directory=None, filename=None, **kwargs):
+    def save(self, directory=None, filename=None, **kwargs):
 
         local = kwargs.get("local", False)
-
-        if index is None:
-            index = self.index
+        index = self.index
 
         if local:
             save_faiss_local(index, directory, filename)
         else:
             save_faiss_hf(index, directory, filename)
+        metadata = _get_metadata(self)
+        save_json_hf(metadata, repo_id=directory, filename=filename)
 
     # -------------------------
     # load,freeze it now later separately work on it
@@ -141,8 +143,6 @@ class FaissIndex(VectorIndex):
                 )
 
         self.index = index
-        self._ensure_idmap2_safe()
-
         base = index.index if isinstance(index, faiss.IndexIDMap2) else index
 
         # restore config from index
@@ -150,7 +150,6 @@ class FaissIndex(VectorIndex):
         self.nlist = base.nlist
         self.m = base.pq.M
         self.nbits = base.pq.nbits
-
         self.trained = base.is_trained
 
         # detect metric

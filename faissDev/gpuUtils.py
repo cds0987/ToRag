@@ -90,6 +90,7 @@ from .base import FaissIndex
 
 def faissIndexTogpu(faissIndex:FaissIndex, device: int = 0, res=None ):
    faissIndex.index,faissIndex.gpures   = FaissGPUUtils.to_gpu(faissIndex.index, device, res)
+   faissIndex.gpu = 1
    
    
 import gc
@@ -103,6 +104,6 @@ def faissIndexTocpu(faissIndex: FaissIndex):
         if hasattr(faissIndex, 'gpures'):
             del faissIndex.gpures
             faissIndex.gpures = None
-        
+        faissIndex.gpu = 0
         # 3. Force garbage collection to clean up the C++ pointers
         gc.collect()

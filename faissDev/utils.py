@@ -10,7 +10,18 @@ def _normalize_faiss_filename(filename: str) -> str:
         filename = filename + ".faiss"
     return filename
 
-
+def _get_metadata(self):
+    return {
+        "class": self.__class__.__name__,
+        "dimension": self.dimension,
+        "nlist": self.nlist,
+        "metric": self.metric,
+        "m": getattr(self, "m", None),
+        "nbits": getattr(self, "nbits", None),
+        "pca_dim": self.pca_dim,
+        "vectornormalize": self.vectornormalize,
+        "min_points_per_centroid": self.min_points_per_centroid,
+    }
 
 def _prepare_index_for_saving(index, clone: bool = False):
     """
