@@ -7,7 +7,7 @@ import torch
 import numpy as np 
 from tqdm.auto import tqdm
 from Utils.iterior import create_iterior       
-class jinaitokenencode(BaseModel):
+class Jinai(BaseModel):
     def __init__(
         self,
         model_name, **kwargs

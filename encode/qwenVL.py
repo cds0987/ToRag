@@ -77,6 +77,7 @@ class QwenVLEncoder(encodeModel):
 
     def __init__(self, model, tokenizer, device="cuda", batch_size=4, normalize=True):
         super().__init__(model)
+        model.to(device)
         self.model = model.eval()
         self.tokenizer = tokenizer
         self.device = device
